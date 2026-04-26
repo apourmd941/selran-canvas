@@ -57,12 +57,33 @@ cd selran-canvas
 pip install -e .
 ```
 
-### Dependencies
+That's it — Python deps install automatically (`mcp`, `fastapi`, `uvicorn[standard]`, `httpx`, `markdown`, `websockets`).
 
-- Python ≥ 3.10
-- `mcp`, `fastapi`, `uvicorn[standard]`, `httpx`, `markdown`
+### What ships pre-bundled
 
-The browser frontend loads `citeproc-js`, `marked`, and `dompurify` from CDN. (For air-gapped use, vendor them under `selran_canvas/canvas/lib/`.)
+- **78 medical-journal CSL XML styles** (all the ones the manifest can resolve), under `selran_canvas/csl/styles/`
+- **The English (en-US) CSL locale** under `selran_canvas/csl/locale/`
+- **citeproc-js, marked, DOMPurify** vendored under `selran_canvas/canvas/lib/` — no CDN dependency, works fully offline
+
+This means: install → start → use. No first-launch downloads, no network hiccups.
+
+### Optional: extend coverage
+
+If you cite from a journal not in the bundled 100, the canvas will lazy-fetch the CSL from the Zotero repo on first selection (~50KB). To pre-fetch everything (e.g., for fully offline operation behind a corporate firewall):
+
+```bash
+python -m selran_canvas.fetch_styles            # fetch missing only
+python -m selran_canvas.fetch_styles --force    # re-fetch everything
+python -m selran_canvas.fetch_styles --category orthopaedics  # one category
+```
+
+### Verify
+
+```bash
+python -m selran_canvas --info     # show URL + port + DB path
+python -m selran_canvas --demo     # seed a 3-page test manuscript and open browser
+python -m pytest tests/            # 41 tests should pass
+```
 
 ---
 
@@ -177,13 +198,42 @@ This seeds a 3-page mini-manuscript (Introduction, Methods, Results) with 4 refe
 
 ---
 
+## Troubleshooting
+
+**Port 11999 / 15000 busy:** Set a different port via env var.
+```bash
+SELRAN_CANVAS_PORT=12345 python -m selran_canvas
+```
+
+**Browser shows "Connected to MCP. Waiting for Claude…":** Canvas is running fine, just no content yet. Either invoke Claude with the canvas tools, or run `python -m selran_canvas --demo` to seed test content.
+
+**Citations rendering as `[smith2020]` literal text instead of formatted:** Either citeproc didn't load (check browser console — `/static/lib/citeproc.js` should return 200) or the reference id you cited isn't in `canvas_add_references` yet. The bracketed-id fallback is intentional — it tells you exactly which references are missing.
+
+**Style 404 for an obscure journal:** Click the journal you want — if it 404s, the canvas falls back to Vancouver and toasts a warning. The Zotero CSL ID may have shifted; file an issue with the manifest entry that broke and we'll fix the `csl_id` mapping. The canvas always works; only specific styles may need a corrected mapping.
+
+**Companions not detected:** Check `~/.claude/mcp.json` for the right server names. You can force a specific set for testing:
+```bash
+SELRAN_CANVAS_FAKE_COMPANIONS=selran-design,selran-data-analysis python -m selran_canvas
+```
+
+**State survives across runs but you want a clean slate:**
+```bash
+rm ~/.selran-canvas/canvas_state.db
+```
+
+**Want to host the canvas in a different shell-launched process from the MCP server:** Run two separate processes — `python -m selran_canvas --http-only` for the canvas, and let Claude Code launch the MCP-only path. Both share the SQLite store.
+
+---
+
 ## Roadmap
 
-**v0.1 (this build)** — 7 MCP tools, page rendering, MCQ widgets, citeproc-js for 100 journal styles, companion detection, three viewing modes, three visual themes, SQLite persistence.
+**v1.0 (this release)** — 7 MCP tools, page rendering with `[@cite]` markers, MCQ widgets with `<!--mcq:anchor-->` placement, citeproc-js processing 100 journal styles, companion-skill detection (graceful fallback), three viewing modes (section / manuscript with page numbers / diff), four visual themes (draft / print / reviewer / compact), SQLite-persisted state, vendored CDN libs (offline-first), 41 passing pytest tests, all 78 unique CSL files bundled in repo.
 
-**v0.2 (next)** — print-to-PDF button, "lock page" so Claude doesn't overwrite work in progress, history/undo (page version snapshots), keyboard shortcut to next-MCQ, vendored CDN libraries for offline use.
+**v1.1 (next)** — print-to-PDF button, "lock page" so Claude doesn't overwrite work in progress, history/undo (page version snapshots), keyboard shortcut to next pending MCQ, persistent journal-style + theme + mode preferences across sessions.
 
-**v0.3 (later)** — click-to-edit a sentence with conflict-resolved sync (operational transforms or CRDTs). This is the "Google Docs" upgrade — significant scope, deferred until needed.
+**v1.2 (later)** — click-to-edit a sentence with conflict-resolved sync (operational transforms or CRDTs). This is the "Google Docs" upgrade — significant scope, deferred until needed.
+
+**v1.3+ (further out)** — collaborative multi-user sessions, structured outline/heading nav, smart figures (markdown-defined Mermaid + plain-language → Mermaid via Claude), CONSORT-flow / PRISMA-flow / SoA Schedule-of-Activities widget primitives.
 
 ---
 

@@ -67,12 +67,17 @@
 
 <div id="toast-stack"></div>
 
+<!--
+  Vendored libs (offline-friendly). Loaded from /static/lib/ first; if these fail
+  for some reason (e.g. file deleted), the canvas degrades gracefully — citations
+  fall back to bracketed [@id] markers, markdown falls back to <pre>.
+-->
 <!-- citeproc-js (CSL processor) -->
-<script src="https://cdn.jsdelivr.net/npm/citeproc@2.4.63/citeproc.min.js"></script>
+<script src="/static/lib/citeproc.js"></script>
 <!-- markdown renderer -->
-<script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
+<script src="/static/lib/marked.min.js"></script>
 <!-- HTML sanitizer (XSS guard for tool-supplied markdown) -->
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="/static/lib/purify.min.js"></script>
 
 <script src="/static/canvas.js"></script>
 </body>

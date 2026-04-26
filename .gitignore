@@ -45,15 +45,10 @@ canvas_state.db-shm
 canvas_state.db-wal
 *.log
 
-# Lazy-fetched CSL styles (only the bundled subset is committed)
-selran_canvas/csl/styles/*.csl
-!selran_canvas/csl/styles/vancouver.csl
-!selran_canvas/csl/styles/apa.csl
-!selran_canvas/csl/styles/the-new-england-journal-of-medicine.csl
-!selran_canvas/csl/styles/the-lancet.csl
-!selran_canvas/csl/styles/american-medical-association.csl
-!selran_canvas/csl/styles/bmj.csl
-!selran_canvas/csl/styles/the-journal-of-bone-and-joint-surgery.csl
+# All bundled CSL styles + the en-US locale ship with the repo for offline use.
+# (To regenerate, delete and run: python -m selran_canvas.fetch_styles)
+# Lazy-fetched additions beyond the manifest will land here too — they're caches
+# and could be either committed (offline-friendly) or kept local. Default: commit them.
 
 # Test artifacts
 .pytest_cache/
