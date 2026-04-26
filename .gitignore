@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Selran Canvas runtime artifacts
+canvas_state.db
+canvas_state.db-journal
+canvas_state.db-shm
+canvas_state.db-wal
+*.log
+
+# Lazy-fetched CSL styles (only the bundled subset is committed)
+selran_canvas/csl/styles/*.csl
+!selran_canvas/csl/styles/vancouver.csl
+!selran_canvas/csl/styles/apa.csl
+!selran_canvas/csl/styles/the-new-england-journal-of-medicine.csl
+!selran_canvas/csl/styles/the-lancet.csl
+!selran_canvas/csl/styles/american-medical-association.csl
+!selran_canvas/csl/styles/bmj.csl
+!selran_canvas/csl/styles/the-journal-of-bone-and-joint-surgery.csl
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/

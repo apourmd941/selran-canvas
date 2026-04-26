@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "selran-canvas"
+version = "0.1.0"
+description = "A page-aware canvas for Claude — render manuscript pages, ask MCQ questions inline, format citations in any of 100+ medical journal styles via CSL."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Selran"}
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.27.0",
+    "markdown>=3.7",
+    "websockets>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]
+
+[project.scripts]
+selran-canvas = "selran_canvas.__main__:main"
+
+[tool.setuptools]
+packages = ["selran_canvas"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+selran_canvas = [
+    "canvas/**/*",
+    "csl/**/*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

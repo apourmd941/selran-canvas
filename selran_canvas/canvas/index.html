@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selran Canvas</title>
+  <link rel="stylesheet" href="/static/canvas.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23184d8c'/%3E%3Ctext x='32' y='42' font-family='serif' font-size='34' fill='white' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+</head>
+<body data-theme="draft" data-mode="section">
+
+<header id="topbar">
+  <div class="topbar-left">
+    <span class="brand">Selran Canvas</span>
+    <span id="rev-indicator" title="state revision">·</span>
+  </div>
+  <div class="topbar-controls">
+    <label class="control">
+      <span>Mode</span>
+      <select id="mode-select">
+        <option value="section">Section view</option>
+        <option value="manuscript">Manuscript</option>
+        <option value="diff">Diff</option>
+      </select>
+    </label>
+    <label class="control">
+      <span>Theme</span>
+      <select id="theme-select">
+        <option value="draft">Draft</option>
+        <option value="print">Print</option>
+        <option value="reviewer">Reviewer</option>
+        <option value="compact">Compact</option>
+      </select>
+    </label>
+    <label class="control control-wide">
+      <span>Journal</span>
+      <input type="text" id="journal-search" placeholder="Search 100 journals…" autocomplete="off">
+      <select id="journal-select" size="1"></select>
+    </label>
+  </div>
+</header>
+
+<aside id="sidebar">
+  <div class="sidebar-header">Pages</div>
+  <ul id="page-nav"></ul>
+  <div class="sidebar-section">
+    <div class="sidebar-header">Companions</div>
+    <ul id="companion-list"></ul>
+  </div>
+</aside>
+
+<main id="viewer">
+  <div id="viewer-empty" class="empty-state">
+    <h1>Selran Canvas</h1>
+    <p>Connected to MCP. Waiting for Claude to render a page&hellip;</p>
+    <p class="muted">Tip: in your chat, ask Claude to render a manuscript section. Pages will appear here. Click MCQ options to answer them inline. Switch the Journal dropdown to instantly reformat citations in any of 100 medical journal styles.</p>
+    <p class="muted small">Run <code>python -m selran_canvas --demo</code> to seed example content.</p>
+  </div>
+  <article id="page-view" hidden></article>
+  <article id="manuscript-view" hidden></article>
+</main>
+
+<div id="bibliography-bar" hidden>
+  <div class="bib-header">References</div>
+  <ol id="bibliography-list"></ol>
+</div>
+
+<div id="toast-stack"></div>
+
+<!-- citeproc-js (CSL processor) -->
+<script src="https://cdn.jsdelivr.net/npm/citeproc@2.4.63/citeproc.min.js"></script>
+<!-- markdown renderer -->
+<script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
+<!-- HTML sanitizer (XSS guard for tool-supplied markdown) -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
+<script src="/static/canvas.js"></script>
+</body>
+</html>

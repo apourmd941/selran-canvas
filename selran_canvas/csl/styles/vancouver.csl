@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" demote-non-dropping-particle="sort-only" page-range-format="minimal" default-locale="en-US">
+  <info>
+    <title>Vancouver (NLM/PubMed numeric — Selran bundled)</title>
+    <id>http://www.zotero.org/styles/vancouver</id>
+    <link href="http://www.zotero.org/styles/vancouver" rel="self"/>
+    <category citation-format="numeric"/>
+    <category field="medicine"/>
+    <summary>Vancouver style for biomedical journals.</summary>
+    <updated>2024-01-01T00:00:00+00:00</updated>
+    <rights license="http://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</rights>
+  </info>
+  <macro name="author">
+    <names variable="author" suffix=".">
+      <name sort-separator=" " initialize-with="" name-as-sort-order="all" delimiter=", " delimiter-precedes-last="always"/>
+      <label form="long" prefix=", "/>
+      <substitute>
+        <names variable="editor"/>
+      </substitute>
+    </names>
+  </macro>
+  <macro name="title">
+    <text variable="title" suffix="."/>
+  </macro>
+  <macro name="container">
+    <choose>
+      <if type="article-journal article-magazine article-newspaper" match="any">
+        <text variable="container-title-short" suffix="." form="short" strip-periods="true"/>
+        <date variable="issued" prefix=" ">
+          <date-part name="year"/>
+        </date>
+        <text variable="volume" prefix=";"/>
+        <text variable="issue" prefix="(" suffix=")"/>
+        <text variable="page" prefix=":"/>
+        <text value="." />
+      </if>
+      <else>
+        <text variable="publisher-place" suffix=": "/>
+        <text variable="publisher" suffix="; "/>
+        <date variable="issued" suffix=".">
+          <date-part name="year"/>
+        </date>
+      </else>
+    </choose>
+  </macro>
+  <citation collapse="citation-number">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout prefix="(" suffix=")" delimiter=",">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+  <bibliography et-al-min="7" et-al-use-first="6" second-field-align="flush">
+    <layout>
+      <text variable="citation-number" suffix=". "/>
+      <group delimiter=" ">
+        <text macro="author"/>
+        <text macro="title"/>
+        <text macro="container"/>
+      </group>
+    </layout>
+  </bibliography>
+</style>
