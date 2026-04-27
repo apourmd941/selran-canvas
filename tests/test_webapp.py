@@ -1,7 +1,6 @@
 """End-to-end tests for the FastAPI HTTP layer."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest

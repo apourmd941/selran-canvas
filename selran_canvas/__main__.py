@@ -57,7 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     store = Store(cfg.db_path)
 
     if args.info:
-        print(f"Selran Canvas")
+        print("Selran Canvas")
         print(f"  URL          : {cfg.url}")
         print(f"  Port         : {cfg.port}  (env SELRAN_CANVAS_PORT={os.environ.get('SELRAN_CANVAS_PORT','')!r})")
         print(f"  State DB     : {cfg.db_path}")

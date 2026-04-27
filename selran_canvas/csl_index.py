@@ -22,7 +22,7 @@ from typing import Any
 
 import httpx
 
-from .config import CSL_DIR, CSL_LOCALE_DIR, CSL_MANIFEST, CSL_STYLES_DIR
+from .config import CSL_LOCALE_DIR, CSL_MANIFEST, CSL_STYLES_DIR
 
 CSL_REPO_RAW = "https://raw.githubusercontent.com/citation-style-language/styles/master"
 CSL_LOCALES_RAW = "https://raw.githubusercontent.com/citation-style-language/locales/master"

@@ -17,15 +17,13 @@ Endpoints:
 from __future__ import annotations
 
 import asyncio
-import json
 from contextlib import asynccontextmanager
-from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, Response
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from .config import CANVAS_DIR, get_config
+from .config import CANVAS_DIR
 from .csl_index import get_locale, get_style_xml, list_styles
 from .store import Store
 

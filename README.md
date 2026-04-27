@@ -1,5 +1,7 @@
 # Selran Canvas
 
+[![tests](https://github.com/apourmd941/selran-canvas/actions/workflows/test.yml/badge.svg)](https://github.com/apourmd941/selran-canvas/actions/workflows/test.yml)
+
 A page-aware canvas for Claude — render manuscript pages, ask MCQ questions inline, and format citations in any of 100+ medical journal styles via [CSL](https://citationstyles.org/).
 
 > Companion to [`selran-medical-writer`](https://github.com/apourmd941/Selran-writing-skill); designed to also serve `selran-design` and `selran-data-analysis` skills when installed.

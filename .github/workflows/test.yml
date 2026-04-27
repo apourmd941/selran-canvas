@@ -1,0 +1,67 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  # Allow manual runs from the GitHub UI
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install package + dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Run pytest
+        run: python -m pytest tests/ -q --tb=short
+
+      - name: Smoke test — import everything
+        run: |
+          python -c "from selran_canvas.config import get_config; print('config OK')"
+          python -c "from selran_canvas.store import Store; print('store OK')"
+          python -c "from selran_canvas.csl_index import list_styles; print(f'manifest: {len(list_styles())} entries')"
+          python -c "from selran_canvas.companions import detect_companions; print('companions OK')"
+          python -c "from selran_canvas.webapp import build_webapp; print('webapp OK')"
+          python -c "from selran_canvas.server import build_mcp_server; print('server OK')"
+
+      - name: Verify bundled CSL files are present
+        shell: bash
+        run: |
+          n=$(ls selran_canvas/csl/styles/*.csl | wc -l | tr -d ' ')
+          echo "Bundled CSL files: $n"
+          test "$n" -ge 50 || (echo "Expected at least 50 bundled CSL files, got $n"; exit 1)
+          test -f selran_canvas/csl/locale/locales-en-US.xml || (echo "Missing en-US locale"; exit 1)
+
+      - name: Verify vendored frontend libs are present
+        shell: bash
+        run: |
+          test -f selran_canvas/canvas/lib/citeproc.js || (echo "Missing citeproc.js"; exit 1)
+          test -f selran_canvas/canvas/lib/marked.min.js || (echo "Missing marked.min.js"; exit 1)
+          test -f selran_canvas/canvas/lib/purify.min.js || (echo "Missing purify.min.js"; exit 1)
+          test -f selran_canvas/canvas/index.html || (echo "Missing index.html"; exit 1)

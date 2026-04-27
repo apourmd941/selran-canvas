@@ -12,9 +12,6 @@ Tools:
 from __future__ import annotations
 
 import json
-import threading
-from dataclasses import asdict
-from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 

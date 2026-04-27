@@ -1,13 +1,9 @@
 """Tests for the CSL manifest + index."""
 from __future__ import annotations
 
-import json
-from pathlib import Path
 
-import pytest
 
 from selran_canvas import csl_index
-from selran_canvas.config import CSL_MANIFEST
 
 
 def test_manifest_loads():
