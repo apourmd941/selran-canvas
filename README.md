@@ -84,7 +84,7 @@ python -m selran_canvas.fetch_styles --category orthopaedics  # one category
 ```bash
 python -m selran_canvas --info     # show URL + port + DB path
 python -m selran_canvas --demo     # seed a 3-page test manuscript and open browser
-python -m pytest tests/            # 41 tests should pass
+python -m pytest tests/            # 46 tests should pass (CI runs them on Linux/macOS/Windows × Python 3.10/3.11/3.12)
 ```
 
 ---
@@ -257,7 +257,7 @@ rm ~/.selran-canvas/canvas_state.db
 
 ## Roadmap
 
-**v1.0 (this release)** — 7 MCP tools, page rendering with `[@cite]` markers, MCQ widgets with `<!--mcq:anchor-->` placement, citeproc-js processing 100 journal styles, companion-skill detection (graceful fallback), three viewing modes (section / manuscript with page numbers / diff), four visual themes (draft / print / reviewer / compact), SQLite-persisted state, vendored CDN libs (offline-first), 41 passing pytest tests, all 78 unique CSL files bundled in repo.
+**v1.0 (this release)** — 7 MCP tools, page rendering with `[@cite]` markers, MCQ widgets with `<!--mcq:anchor-->` placement, citeproc-js processing 100 journal styles, companion-skill detection (graceful fallback), three viewing modes (section / manuscript with page numbers / diff), four visual themes (draft / print / reviewer / compact), SQLite-persisted state, vendored CDN libs (offline-first), 46 passing pytest tests, all 78 unique CSL files bundled in repo, **cross-OS CI** (GitHub Actions matrix: Linux/macOS/Windows × Python 3.10/3.11/3.12 = 9 jobs, every push and PR), Path B `selran-mcp` plugin (`canvas_mcp_plugin/__init__.py`) with regression-locked contract tests so the unified-server discovery never silently breaks.
 
 **v1.1 (next)** — print-to-PDF button, "lock page" so Claude doesn't overwrite work in progress, history/undo (page version snapshots), keyboard shortcut to next pending MCQ, persistent journal-style + theme + mode preferences across sessions.
 
