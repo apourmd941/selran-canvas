@@ -25,8 +25,23 @@ from .store import Store
 VALID_THEMES = {"draft", "print", "reviewer", "compact"}
 
 
-def build_mcp_server(store: Store, http_url: str) -> FastMCP:
-    mcp = FastMCP("selran-canvas")
+def build_mcp_server(
+    store: Store,
+    http_url: str,
+    mcp: FastMCP | None = None,
+) -> FastMCP:
+    """Register the 7 canvas tools.
+
+    Two call modes:
+        1. Standalone (default) — `mcp=None`: creates a new FastMCP("selran-canvas")
+           and registers tools onto it. Used by `python -m selran_canvas` for the
+           direct-MCP path.
+        2. Embedded — `mcp=<existing FastMCP>`: registers tools onto the supplied
+           instance. Used by the selran-mcp Path B plugin so the canvas tools join
+           selran-mcp's unified tool surface (alongside writer/design/sada).
+    """
+    if mcp is None:
+        mcp = FastMCP("selran-canvas")
 
     # On startup, write detected companions into the store so canvas_get_state can return them.
     companions = detect_companions()

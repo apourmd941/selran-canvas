@@ -1,0 +1,13 @@
+{
+  "selran_skill_version": 1,
+  "id": "canvas",
+  "name": "Selran Canvas",
+  "version": "1.0.0",
+  "summary": "Page-aware canvas — render manuscript pages, ask MCQ questions inline, format citations in any of 100+ medical journal styles via CSL. Browser canvas at localhost:15000 (or SELRAN_CANVAS_PORT). Companion to selran-medical-writer; serves design + data-analysis skills when installed.",
+  "asset_dirs": [],
+  "plugin": {
+    "module_path": "canvas_mcp_plugin/__init__.py",
+    "register_function": "register"
+  },
+  "tags": ["canvas", "manuscript", "csl", "citations", "mcq", "browser-ui"]
+}

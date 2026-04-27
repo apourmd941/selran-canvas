@@ -87,9 +87,37 @@ python -m pytest tests/            # 41 tests should pass
 
 ---
 
-## Wire into Claude Code
+## Wire into Claude (two equivalent paths)
 
-Add to your Claude Code MCP config (typically `~/.claude/mcp.json` or platform equivalent):
+### Path 1 — via the unified `selran-mcp` (recommended)
+
+If you also use `selran-mcp` (the unified MCP server that bridges every Selran skill into Claude desktop — writer, design, SADA, canvas, …), there is **no separate Claude config edit**. Drop the manifest, restart Claude desktop, and the canvas tools join the unified surface alongside the other Selran skills.
+
+```bash
+./install.sh   # pip-installs selran-canvas + wires into selran-mcp if present
+```
+
+Or manually:
+
+```bash
+pip install -e .
+# If you have selran-mcp:
+pip install -e "${HOME}/NeutronDev/Selran datacore skill platform/mcp_server"
+selran-mcp install
+selran-mcp status   # should show: canvas    Selran Canvas v1.0.0  plugin ✓
+```
+
+Then **⌘Q Claude desktop and reopen.** In a new conversation:
+
+```
+Call selran_status and tell me which Selran skills are connected.
+```
+
+You should see `canvas` listed with 7 tools. From that point on, any conversation can call `canvas_set_page`, `canvas_ask_mcq`, `canvas_get_state`, etc., and the browser canvas at `http://localhost:15000` (or `SELRAN_CANVAS_PORT`) will reflect every change live.
+
+### Path 2 — direct `mcpServers` entry (Claude Code without selran-mcp)
+
+If you don't have `selran-mcp` and just want canvas as a standalone MCP plugin, add this to `~/.claude/mcp.json` (or the Claude Code platform-equivalent):
 
 ```json
 {
@@ -97,17 +125,17 @@ Add to your Claude Code MCP config (typically `~/.claude/mcp.json` or platform e
     "selran-canvas": {
       "command": "python",
       "args": ["-m", "selran_canvas"],
-      "env": {
-        "SELRAN_CANVAS_PORT": "11999"
-      }
+      "env": { "SELRAN_CANVAS_PORT": "11999" }
     }
   }
 }
 ```
 
-`SELRAN_CANVAS_PORT` is optional. If unset, the canvas falls back to **15000** (and tries 15001..15004 if busy).
+Restart Claude Code. The canvas's 7 tools become available. Open `http://localhost:11999` (or whichever port) to see the canvas.
 
-After Claude Code restarts, the canvas's 7 tools become available to Claude. Open `http://localhost:11999` (or whichever port) in a browser to see the canvas.
+### Both paths share the same SQLite store
+
+If you happen to run **both** the standalone `python -m selran_canvas` AND the selran-mcp plugin pointing at the same `SELRAN_CANVAS_PORT`, the plugin detects the existing HTTP server and joins it — both routes write to the same `~/.selran-canvas/canvas_state.db`. No coordination needed; pick whichever route fits your setup.
 
 ---
 
