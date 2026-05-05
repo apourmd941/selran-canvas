@@ -64,6 +64,7 @@ def test_tool_registry(mcp):
     assert tool_names == {
         "canvas_set_page",
         "canvas_ask_mcq",
+        "canvas_answer_mcq",
         "canvas_get_state",
         "canvas_add_references",
         "canvas_set_journal_style",
@@ -157,6 +158,56 @@ def test_ask_mcq_returns_existing_answer(mcp, store: Store):
     r = call_tool(mcp, "canvas_ask_mcq", {"mcq_id": "m", "page_id": "p", "question": "Q", "options": ["A", "B"]})
     assert r["status"] == "answered"
     assert r["answer"] == "B"
+
+
+def test_answer_mcq_from_chat(mcp, store: Store):
+    """canvas_answer_mcq is the chat-side mirror of clicking an option in the
+    browser canvas. Both write to the same store."""
+    call_tool(mcp, "canvas_set_page", {"page_id": "p", "title": "P", "content_md": "x"})
+    call_tool(mcp, "canvas_ask_mcq", {
+        "mcq_id": "m1", "page_id": "p", "question": "Q1", "options": ["A", "B", "C"],
+    })
+    call_tool(mcp, "canvas_ask_mcq", {
+        "mcq_id": "m2", "page_id": "p", "question": "Q2", "options": ["A", "B"],
+    })
+
+    # User types "B" in chat in response to m1
+    r = call_tool(mcp, "canvas_answer_mcq", {"mcq_id": "m1", "answer": "B"})
+    assert r["ok"] is True
+    assert r["mcq_id"] == "m1"
+    assert r["answer"] == "B"
+    assert r["pending_remaining"] == 1  # m2 still open
+
+    # Lowercase "b" + whitespace also accepted
+    r = call_tool(mcp, "canvas_answer_mcq", {"mcq_id": "m2", "answer": "  a  "})
+    assert r["ok"] is True
+    assert r["answer"] == "A"
+    assert r["pending_remaining"] == 0
+
+
+def test_answer_mcq_validates_input(mcp, store: Store):
+    call_tool(mcp, "canvas_set_page", {"page_id": "p", "title": "P", "content_md": "x"})
+    call_tool(mcp, "canvas_ask_mcq", {
+        "mcq_id": "m", "page_id": "p", "question": "Q", "options": ["A", "B"],
+    })
+
+    # multi-character answer rejected
+    r = call_tool(mcp, "canvas_answer_mcq", {"mcq_id": "m", "answer": "AB"})
+    assert r["ok"] is False
+    assert "single letter" in r["error"]
+
+    # number rejected
+    r = call_tool(mcp, "canvas_answer_mcq", {"mcq_id": "m", "answer": "1"})
+    assert r["ok"] is False
+
+    # out-of-range letter rejected
+    r = call_tool(mcp, "canvas_answer_mcq", {"mcq_id": "m", "answer": "Z"})
+    assert r["ok"] is False
+
+    # unknown mcq_id
+    r = call_tool(mcp, "canvas_answer_mcq", {"mcq_id": "nonexistent", "answer": "A"})
+    assert r["ok"] is False
+    assert "unknown mcq_id" in r["error"]
 
 
 def test_get_state_returns_full_snapshot(mcp, store: Store):

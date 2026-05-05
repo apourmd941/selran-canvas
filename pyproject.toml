@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "selran-canvas"
-version = "0.1.0"
+version = "1.0.1"
 description = "A page-aware canvas for Claude — render manuscript pages, ask MCQ questions inline, format citations in any of 100+ medical journal styles via CSL."
 readme = "README.md"
 requires-python = ">=3.10"

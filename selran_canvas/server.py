@@ -116,6 +116,33 @@ def build_mcp_server(
             "answer": existing.answer if existing else None,
         }
 
+    # --- canvas_answer_mcq -----------------------------------------------
+
+    @mcp.tool()
+    def canvas_answer_mcq(mcq_id: str, answer: str) -> dict:
+        """Submit an answer to a pending MCQ from chat.
+
+        This mirrors what clicking the option in the browser canvas does — both
+        write to the same SQLite store. Use this when the user types a single
+        letter (A/B/C/...) in chat in response to an MCQ I just asked. The
+        browser canvas updates live; the next canvas_get_state() will show the
+        MCQ as answered.
+
+        Args:
+            mcq_id: the mcq_id we created with canvas_ask_mcq.
+            answer: a single letter A-F matching one of the MCQ's options.
+
+        Returns:
+            {ok, mcq_id, answer, pending_remaining}
+        """
+        ans = (answer or "").strip().upper()
+        if len(ans) != 1 or not ans.isalpha() or ans not in "ABCDEF":
+            return {"ok": False, "error": "answer must be a single letter A-F"}
+        if not store.answer_mcq(mcq_id, ans):
+            return {"ok": False, "error": f"unknown mcq_id '{mcq_id}'"}
+        pending_remaining = sum(1 for m in store.get_mcqs() if not m.answer)
+        return {"ok": True, "mcq_id": mcq_id, "answer": ans, "pending_remaining": pending_remaining}
+
     # --- canvas_get_state ------------------------------------------------
 
     @mcp.tool()

@@ -29,12 +29,13 @@ The canvas is **read-only** by design. Editing is done via MCQ-driven turns with
 ┌──────────────────────────┐         ┌─────────────────────────┐
 │  Claude (chat)           │         │  Browser canvas         │
 │                          │         │  http://localhost:PORT  │
-│  Calls 7 MCP tools:      │ ──MCP─► │                         │
+│  Calls 8 MCP tools:      │ ──MCP─► │                         │
 │  • canvas_set_page       │         │  • renders pages        │
 │  • canvas_ask_mcq        │         │  • shows MCQs           │
-│  • canvas_get_state      │ ◄──WS── │  • style + theme picker │
-│  • canvas_add_references │         │  • citeproc-js for CSL  │
-│  • canvas_set_journal_…  │         │  • bibliography panel   │
+│  • canvas_answer_mcq     │ ◄──WS── │  • style + theme picker │
+│  • canvas_get_state      │         │  • citeproc-js for CSL  │
+│  • canvas_add_references │         │  • bibliography panel   │
+│  • canvas_set_journal_…  │         │                         │
 │  • canvas_set_visual_…   │         │                         │
 │  • canvas_list_journal_… │         └─────────────────────────┘
 └──────────────────────────┘                      │
@@ -84,7 +85,7 @@ python -m selran_canvas.fetch_styles --category orthopaedics  # one category
 ```bash
 python -m selran_canvas --info     # show URL + port + DB path
 python -m selran_canvas --demo     # seed a 3-page test manuscript and open browser
-python -m pytest tests/            # 46 tests should pass (CI runs them on Linux/macOS/Windows × Python 3.10/3.11/3.12)
+python -m pytest tests/            # 48 tests should pass (CI runs them on Linux/macOS/Windows × Python 3.10/3.11/3.12)
 ```
 
 ---
@@ -106,7 +107,7 @@ pip install -e .
 # If you have selran-mcp:
 pip install -e "${HOME}/NeutronDev/Selran datacore skill platform/mcp_server"
 selran-mcp install
-selran-mcp status   # should show: canvas    Selran Canvas v1.0.0  plugin ✓
+selran-mcp status   # should show: canvas    Selran Canvas v1.0.1  plugin ✓
 ```
 
 Then **⌘Q Claude desktop and reopen.** In a new conversation:
@@ -115,7 +116,7 @@ Then **⌘Q Claude desktop and reopen.** In a new conversation:
 Call selran_status and tell me which Selran skills are connected.
 ```
 
-You should see `canvas` listed with 7 tools. From that point on, any conversation can call `canvas_set_page`, `canvas_ask_mcq`, `canvas_get_state`, etc., and the browser canvas at `http://localhost:15000` (or `SELRAN_CANVAS_PORT`) will reflect every change live.
+You should see `canvas` listed with 8 tools. From that point on, any conversation can call `canvas_set_page`, `canvas_ask_mcq`, `canvas_get_state`, etc., and the browser canvas at `http://localhost:15000` (or `SELRAN_CANVAS_PORT`) will reflect every change live.
 
 ### Path 2 — direct `mcpServers` entry (Claude Code without selran-mcp)
 
@@ -133,7 +134,7 @@ If you don't have `selran-mcp` and just want canvas as a standalone MCP plugin, 
 }
 ```
 
-Restart Claude Code. The canvas's 7 tools become available. Open `http://localhost:11999` (or whichever port) to see the canvas.
+Restart Claude Code. The canvas's 8 tools become available. Open `http://localhost:11999` (or whichever port) to see the canvas.
 
 ### Both paths share the same SQLite store
 
@@ -187,17 +188,30 @@ Total: **100 journals**, plus generic Vancouver + APA. Anything outside this lis
 
 ---
 
-## The 7 MCP tools
+## The 8 MCP tools
 
 | Tool | Description |
 |---|---|
 | `canvas_set_page(page_id, title, content_md)` | Render/update a page. Markdown supports `[@cite_id]` citation markers, tables, code, images, and `<!--mcq:foo-->` MCQ anchors. |
 | `canvas_ask_mcq(mcq_id, page_id, question, options, anchor?)` | Show an inline MCQ on a page. 2–6 options. Anchor at a `<!--mcq:foo-->` marker if present, else at the end of the page. |
+| `canvas_answer_mcq(mcq_id, answer)` | Submit an MCQ answer from chat (mirror of clicking the option in the browser). When the user types a single letter A–F in chat, forward it via this tool — the browser canvas updates live and the answer joins `canvas_get_state()` like any other. |
 | `canvas_get_state()` | Read everything: current page, viewing mode, journal style, theme, all pages, all MCQ answers, all references, detected companion skills. Call this first thing each turn. |
 | `canvas_add_references(refs)` | Bulk-add CSL-JSON entries. Each must have an `id` (matches `[@id]` markers in markdown). Re-using an id replaces the entry. |
 | `canvas_set_journal_style(style_id)` | Switch journal — instantly reformats every citation. IDs match Zotero CSL repo (`the-new-england-journal-of-medicine`, `the-lancet`, `the-journal-of-bone-and-joint-surgery`, etc.). |
 | `canvas_set_visual_theme(theme_id)` | `draft` (default working) • `print` (submission preview) • `reviewer` (track-changes-style) • `compact` |
 | `canvas_list_journal_styles(query?)` | Search the manifest. Empty query returns all 100. |
+
+---
+
+## Chat-side signals
+
+The canvas is the document; the chat is the conversation. The writer skill follows three light conventions to keep them in sync without flooding chat:
+
+- **Session-start status** — Claude calls `canvas_get_state()` once at the beginning and surfaces a single italicized line, e.g. `*📋 Canvas resumed: 4 pages · NEJM · 1 MCQ pending · viewing methods*`.
+- **Per-turn compact badge** — when a turn touches canvas, the **last** line of the reply is one short italicized line like `*📋 4p · NEJM · 1 MCQ pending*` (page count · journal short-name · MCQs pending · theme suffix only if not `draft`). Turns that don't touch canvas don't emit a badge.
+- **MCQ chat-mirror** — every `canvas_ask_mcq` call also writes the question and lettered options as a blockquote in the chat reply. The user can either click in the canvas or type a single letter A–F in chat; Claude forwards the typed letter via `canvas_answer_mcq` and the browser card flips to "answered" in real time.
+
+These conventions live in the writer skill's `SKILL.md` ("Chat-side signals (compact, not noisy)" subsection); other skills that drive the canvas can adopt the same pattern.
 
 ---
 
@@ -257,7 +271,9 @@ rm ~/.selran-canvas/canvas_state.db
 
 ## Roadmap
 
-**v1.0 (this release)** — 7 MCP tools, page rendering with `[@cite]` markers, MCQ widgets with `<!--mcq:anchor-->` placement, citeproc-js processing 100 journal styles, companion-skill detection (graceful fallback), three viewing modes (section / manuscript with page numbers / diff), four visual themes (draft / print / reviewer / compact), SQLite-persisted state, vendored CDN libs (offline-first), 46 passing pytest tests, all 78 unique CSL files bundled in repo, **cross-OS CI** (GitHub Actions matrix: Linux/macOS/Windows × Python 3.10/3.11/3.12 = 9 jobs, every push and PR), Path B `selran-mcp` plugin (`canvas_mcp_plugin/__init__.py`) with regression-locked contract tests so the unified-server discovery never silently breaks.
+**v1.0 (initial release)** — 7 MCP tools, page rendering with `[@cite]` markers, MCQ widgets with `<!--mcq:anchor-->` placement, citeproc-js processing 100 journal styles, companion-skill detection (graceful fallback), three viewing modes (section / manuscript with page numbers / diff), four visual themes (draft / print / reviewer / compact), SQLite-persisted state, vendored CDN libs (offline-first), 46 passing pytest tests, all 78 unique CSL files bundled in repo, **cross-OS CI** (GitHub Actions matrix: Linux/macOS/Windows × Python 3.10/3.11/3.12 = 9 jobs, every push and PR), Path B `selran-mcp` plugin (`canvas_mcp_plugin/__init__.py`) with regression-locked contract tests so the unified-server discovery never silently breaks.
+
+**v1.0.1 (current)** — Adds an 8th MCP tool, `canvas_answer_mcq(mcq_id, answer)`, that lets users answer MCQs by typing a single letter A–F in chat instead of (or in addition to) clicking in the browser. Both routes write to the same SQLite store, so the canvas card flips to "answered" live either way. Paired with three new "chat-side signals" conventions in the writer skill — session-start status line, per-turn compact badge, and an MCQ chat-mirror — so canvas activity surfaces in chat without flooding it. 48 passing pytest tests (added two for the new tool's input validation and chat-side answering flow).
 
 **v1.1 (next)** — print-to-PDF button, "lock page" so Claude doesn't overwrite work in progress, history/undo (page version snapshots), keyboard shortcut to next pending MCQ, persistent journal-style + theme + mode preferences across sessions.
 

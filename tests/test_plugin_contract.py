@@ -27,6 +27,7 @@ from selran_canvas.store import Store
 EXPECTED_TOOLS = {
     "canvas_set_page",
     "canvas_ask_mcq",
+    "canvas_answer_mcq",
     "canvas_get_state",
     "canvas_add_references",
     "canvas_set_journal_style",
@@ -81,15 +82,15 @@ def test_register_function_exists(loaded_plugin):
     assert callable(loaded_plugin.register), "register is not callable"
 
 
-def test_register_returns_seven(loaded_plugin):
-    """register() must return exactly 7 (the canvas tool count)."""
+def test_register_returns_eight(loaded_plugin):
+    """register() must return exactly 8 (the canvas tool count)."""
     host = FastMCP("selran-mcp-test")
     fake_manifest = SimpleNamespace(
         repo_root=Path(__file__).resolve().parent.parent,
         id="canvas",
     )
     n = loaded_plugin.register(host, fake_manifest)
-    assert n == 7, f"register() returned {n}, expected 7"
+    assert n == 8, f"register() returned {n}, expected 8"
 
 
 def test_register_attaches_all_canvas_tools(loaded_plugin):
@@ -138,4 +139,4 @@ def test_register_is_idempotent(loaded_plugin):
         assert "duplicate" in str(e).lower() or "already" in str(e).lower(), (
             f"unexpected error on second register(): {e!r}"
         )
-    assert n1 == 7
+    assert n1 == 8
