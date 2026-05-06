@@ -23,6 +23,33 @@
   const STYLE_CACHE = new Map(); // style_id -> CSL XML
   const MANIFEST = []; // populated from /api/csl/styles
 
+  // Project hub state (Phase 2). Loaded from /api/projects on init
+  // and refreshed on focus / after project_create / after switch.
+  // PROJECT_VIEW.companion is non-null when the user has clicked a
+  // companion in the sidebar — we render the per-companion artifact
+  // list in #companion-view and hide the page/manuscript views until
+  // they navigate away (click a page, switch project, etc.).
+  const PROJECTS_STATE = {
+    list: [],
+    current_id: null,
+    project: null,
+  };
+  const PROJECT_VIEW = {
+    companion: null,           // e.g. "selran-medical-writer" when a tab is active
+    artifacts: [],             // most recent fetch
+    open_artifact: null,       // filename currently rendered in the reader
+  };
+  // Mapping kept in lockstep with the server's projects.COMPANION_TO_SUBDIR.
+  // If you add a companion in companions.py / projects.py, mirror the
+  // mapping here so clicking it lands in the right subdirectory.
+  const COMPANION_TO_SUBDIR = {
+    "selran-medical-writer": "manuscript",
+    "selran-design":         "figures",
+    "selran-data-analysis":  "data",
+    "selran-librarian":      "references",
+    "bio-research-pubmed":   "pubmed",
+  };
+
   // ---- WebSocket ----
   function connectWS() {
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
@@ -212,11 +239,23 @@
       "selran-medical-writer": "selran-medical-writer",
       "selran-design": "selran-design",
       "selran-data-analysis": "selran-data-analysis",
+      "selran-librarian": "selran-librarian",
       "bio-research-pubmed": "bio-research:pubmed",
     };
     for (const [k, label] of Object.entries(labels)) {
       const li = document.createElement("li");
       if (comps[k]) li.classList.add("installed");
+      // Phase 2: companions are clickable when there's a current
+      // project AND we know which subdirectory the companion writes
+      // into. Without a project they're informational only — clicking
+      // would have nowhere to land.
+      const subdir = COMPANION_TO_SUBDIR[k];
+      const canClick = !!(PROJECTS_STATE.current_id && subdir);
+      if (canClick) {
+        li.classList.add("clickable");
+        if (PROJECT_VIEW.companion === k) li.classList.add("active");
+        li.onclick = () => openCompanionView(k);
+      }
       li.innerHTML = `<span class="dot"></span><span>${label}</span>`;
       ul.appendChild(li);
     }
@@ -244,7 +283,21 @@
   }
 
   function renderViewer() {
-    if (!STATE.pages || !STATE.pages.length) {
+    // If the user clicked a companion in the sidebar, the companion
+    // artifact view takes over the main column. It's the "project hub"
+    // surface — switching projects or clicking another companion
+    // updates this view; closing it falls back to the page/manuscript
+    // flow Canvas already had.
+    if (PROJECT_VIEW.companion) {
+      $("#viewer-empty").hidden = true;
+      $("#page-view").hidden = true;
+      $("#manuscript-view").hidden = true;
+      $("#bibliography-bar").hidden = true;
+      $("#companion-view").hidden = false;
+      return;
+    }
+    $("#companion-view").hidden = true;
+    if (!STATE || !STATE.pages || !STATE.pages.length) {
       $("#viewer-empty").hidden = false;
       $("#page-view").hidden = true;
       $("#manuscript-view").hidden = true;
@@ -415,6 +468,220 @@
       });
     });
     $("#journal-search").addEventListener("input", (e) => populateJournalSelect(e.target.value));
+
+    // Project picker: switching the dropdown sets the new current
+    // project on the server, then re-fetches so the sidebar +
+    // companion view reflect the new context. The empty-string
+    // value at the top represents "no project" which clears the
+    // pointer.
+    $("#project-select").addEventListener("change", async (e) => {
+      const slug = e.target.value;
+      if (!slug) return; // ignore the placeholder
+      const r = await fetch("/api/projects/current", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: slug }),
+      });
+      if (!r.ok) {
+        toast(`Couldn't switch project: ${await r.text()}`);
+        return;
+      }
+      // Switching project closes any companion view we had open;
+      // the artifact list belongs to the previous project.
+      PROJECT_VIEW.companion = null;
+      PROJECT_VIEW.open_artifact = null;
+      await loadProjects();
+      renderCompanions(STATE?.companions || {});
+      renderViewer();
+    });
+
+    // "+ New" button — minimal flow using browser prompts. A richer
+    // modal can come later; the prompt-based flow keeps the JS small
+    // and matches Canvas's existing dialog-free aesthetic.
+    $("#project-new-btn").addEventListener("click", async () => {
+      const name = window.prompt("New project name:");
+      if (!name || !name.trim()) return;
+      const kindRaw = window.prompt(
+        "Kind? (paper / design / analysis / learning / exam / general)",
+        "general",
+      );
+      const kind = (kindRaw || "general").trim().toLowerCase();
+      const r = await fetch("/api/projects", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), kind }),
+      });
+      if (!r.ok) {
+        toast(`Couldn't create project: ${await r.text()}`);
+        return;
+      }
+      const meta = await r.json();
+      toast(`Created project "${meta.name}"`);
+      await loadProjects();
+      renderCompanions(STATE?.companions || {});
+    });
+
+    // Artifact reader close button.
+    $("#artifact-reader-close").addEventListener("click", () => {
+      PROJECT_VIEW.open_artifact = null;
+      $("#companion-artifact-reader").hidden = true;
+    });
+
+    // Refresh project list when the window regains focus — picks up
+    // projects created from another surface (Launchpad, Claude
+    // desktop) without requiring a manual reload.
+    window.addEventListener("focus", () => {
+      loadProjects().then(() => {
+        if (PROJECT_VIEW.companion) refreshCompanionView();
+      });
+    });
+  }
+
+  // ---- Project hub (Phase 2) ------------------------------------------
+
+  async function loadProjects() {
+    let list = [];
+    let current_id = null;
+    let project = null;
+    try {
+      const r = await fetch("/api/projects");
+      if (r.ok) {
+        const data = await r.json();
+        list = data.projects || [];
+        current_id = data.current_project_id || null;
+      }
+      if (current_id) {
+        const r2 = await fetch("/api/projects/current");
+        if (r2.ok) {
+          const d2 = await r2.json();
+          project = d2.project || null;
+          current_id = d2.current_project_id || current_id;
+        }
+      }
+    } catch (e) {
+      // Non-fatal — Canvas still works without projects (single-thread,
+      // no organisation). Just leave the picker empty.
+    }
+    PROJECTS_STATE.list = list;
+    PROJECTS_STATE.current_id = current_id;
+    PROJECTS_STATE.project = project;
+    renderProjectPicker();
+  }
+
+  function renderProjectPicker() {
+    const sel = $("#project-select");
+    if (!sel) return;
+    sel.innerHTML = "";
+    // Placeholder so we always have a "no selection" state.
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = PROJECTS_STATE.list.length
+      ? "(pick a project…)"
+      : "(no projects yet)";
+    sel.appendChild(placeholder);
+    for (const p of PROJECTS_STATE.list) {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      // Show the name; on hover the tooltip carries the kind so
+      // users can tell paper/learning/exam apart in the dropdown.
+      opt.textContent = p.name;
+      opt.title = `${p.kind} · ${p.id}`;
+      if (p.id === PROJECTS_STATE.current_id) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  async function openCompanionView(companionId) {
+    if (!PROJECTS_STATE.current_id) {
+      toast("Pick or create a project first.");
+      return;
+    }
+    PROJECT_VIEW.companion = companionId;
+    PROJECT_VIEW.open_artifact = null;
+    await refreshCompanionView();
+    renderCompanions(STATE?.companions || {}); // re-render to mark active
+    renderViewer();
+  }
+
+  async function refreshCompanionView() {
+    const companionId = PROJECT_VIEW.companion;
+    if (!companionId || !PROJECTS_STATE.current_id) return;
+    const subdir = COMPANION_TO_SUBDIR[companionId];
+    if (!subdir) return;
+    const url = `/api/projects/${encodeURIComponent(PROJECTS_STATE.current_id)}/artifacts/${encodeURIComponent(subdir)}`;
+    try {
+      const r = await fetch(url);
+      if (r.ok) {
+        const data = await r.json();
+        PROJECT_VIEW.artifacts = data.artifacts || [];
+      } else {
+        PROJECT_VIEW.artifacts = [];
+      }
+    } catch {
+      PROJECT_VIEW.artifacts = [];
+    }
+    renderCompanionView();
+  }
+
+  function renderCompanionView() {
+    const companionId = PROJECT_VIEW.companion;
+    const subdir = COMPANION_TO_SUBDIR[companionId] || "?";
+    $("#companion-view-title").textContent = companionId;
+    const projectLabel = PROJECTS_STATE.project
+      ? `${PROJECTS_STATE.project.name} (${PROJECTS_STATE.project.kind})`
+      : PROJECTS_STATE.current_id || "(no project)";
+    $("#companion-view-subtitle").textContent =
+      `Project: ${projectLabel} · subdir: ${subdir}`;
+
+    const ul = $("#companion-artifact-list");
+    ul.innerHTML = "";
+    if (!PROJECT_VIEW.artifacts.length) {
+      const empty = document.createElement("li");
+      empty.className = "artifact-list-empty";
+      empty.textContent = `Nothing in ${subdir}/ yet — when ${companionId} writes here, you'll see it.`;
+      ul.appendChild(empty);
+    } else {
+      for (const a of PROJECT_VIEW.artifacts) {
+        const li = document.createElement("li");
+        li.innerHTML =
+          `<span class="artifact-name">${escapeHtml(a.name)}</span>` +
+          `<span class="artifact-meta">${formatBytes(a.size_bytes)} · ${formatDate(a.modified_at)}</span>`;
+        li.onclick = () => openArtifact(a.name);
+        ul.appendChild(li);
+      }
+    }
+  }
+
+  async function openArtifact(filename) {
+    const companionId = PROJECT_VIEW.companion;
+    if (!companionId || !PROJECTS_STATE.current_id) return;
+    const subdir = COMPANION_TO_SUBDIR[companionId];
+    if (!subdir) return;
+    const url = `/api/projects/${encodeURIComponent(PROJECTS_STATE.current_id)}/artifacts/${encodeURIComponent(subdir)}/${encodeURIComponent(filename)}`;
+    try {
+      const r = await fetch(url);
+      if (!r.ok) {
+        toast(`Couldn't load ${filename}`);
+        return;
+      }
+      const data = await r.json();
+      PROJECT_VIEW.open_artifact = filename;
+      $("#artifact-reader-name").textContent = filename;
+      $("#artifact-reader-content").textContent = data.content || "(empty)";
+      $("#companion-artifact-reader").hidden = false;
+    } catch {
+      toast(`Couldn't load ${filename}`);
+    }
+  }
+
+  function formatBytes(n) {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleDateString(); }
+    catch { return iso; }
   }
 
   // ---- Boot ----
@@ -422,6 +689,7 @@
     await fetchManifest();
     bindControls();
     await loadLocale();
+    await loadProjects();
     connectWS();
   }
   boot();

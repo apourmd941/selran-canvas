@@ -12,6 +12,15 @@ Endpoints:
     POST /api/state/journal_style → user picks a journal (browser only)
     POST /api/state/visual_theme  → user picks a theme (browser only)
     POST /api/state/viewing_mode  → user toggles section/manuscript/diff (browser only)
+
+    GET  /api/projects                            → list all projects
+    POST /api/projects                            → create a project
+    GET  /api/projects/current                    → which is "open"
+    POST /api/projects/current                    → set the open project
+    GET  /api/projects/{id}                       → metadata for one project
+    GET  /api/projects/{id}/artifacts/{subdir}    → list files in subdir
+    GET  /api/projects/{id}/artifacts/{subdir}/{file} → read one file
+
     WS   /ws                     → push live state updates on each store revision
 """
 from __future__ import annotations
@@ -23,6 +32,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from . import projects
 from .config import CANVAS_DIR
 from .csl_index import get_locale, get_style_xml, list_styles
 from .store import Store
@@ -113,6 +123,101 @@ def build_webapp(store: Store) -> FastAPI:
     @app.get("/api/health")
     async def health():
         return {"ok": True, "revision": store.revision()}
+
+    # ---- Project endpoints ----------------------------------------------
+    #
+    # Projects are filesystem-rooted at ~/Documents/Selran Projects/.
+    # Canvas, the Launchpad, and Claude (via the MCP server) all read
+    # the same directory; whichever surface most recently called
+    # POST /api/projects/current wins. The "current project" pointer is
+    # ~/.selran/current_project (a single slug).
+
+    @app.get("/api/projects")
+    async def api_projects_list(kind: str | None = None):
+        """List every project on disk, with the current-project id."""
+        return JSONResponse({
+            "current_project_id": projects.get_current_id(),
+            "projects": projects.list_all(kind=kind),
+        })
+
+    @app.post("/api/projects")
+    async def api_projects_create(payload: dict):
+        """Create a new project. Required: name. Optional: kind
+        (paper | design | analysis | learning | exam | general),
+        description, set_as_current (default true)."""
+        name = (payload.get("name") or "").strip()
+        if not name:
+            raise HTTPException(400, "name is required")
+        kind = payload.get("kind") or "general"
+        description = payload.get("description")
+        set_as_current = bool(payload.get("set_as_current", True))
+        meta = projects.create(
+            name=name,
+            kind=kind,
+            description=description,
+            set_as_current=set_as_current,
+        )
+        return JSONResponse(meta, status_code=201)
+
+    @app.get("/api/projects/current")
+    async def api_projects_get_current():
+        cid = projects.get_current_id()
+        if cid is None:
+            return JSONResponse({"current_project_id": None, "project": None})
+        meta = projects.get(cid)
+        if meta is None:
+            # Stale pointer — clear it and report nothing.
+            return JSONResponse({"current_project_id": None, "project": None})
+        return JSONResponse({"current_project_id": cid, "project": meta})
+
+    @app.post("/api/projects/current")
+    async def api_projects_set_current(payload: dict):
+        slug = (payload.get("id") or "").strip()
+        if not slug:
+            raise HTTPException(400, "id is required")
+        try:
+            meta = projects.set_current(slug)
+        except ValueError as e:
+            raise HTTPException(404, str(e))
+        return JSONResponse({"current_project_id": slug, "project": meta})
+
+    @app.get("/api/projects/{slug}")
+    async def api_projects_get(slug: str):
+        meta = projects.get(slug)
+        if meta is None:
+            raise HTTPException(404, f"Project '{slug}' not found")
+        return JSONResponse(meta)
+
+    @app.get("/api/projects/{slug}/artifacts/{subdir}")
+    async def api_projects_artifacts(slug: str, subdir: str):
+        """List files under <project>/<subdir>/. Empty list (not 404)
+        when the subdir doesn't exist yet — that's the case for a new
+        project where the companion hasn't written anything."""
+        if projects.get(slug) is None:
+            raise HTTPException(404, f"Project '{slug}' not found")
+        # Path-traversal guard: caller can ask for "manuscript" but
+        # not "../../etc". Reject anything with a slash or dot-dot.
+        if "/" in subdir or ".." in subdir:
+            raise HTTPException(400, "invalid subdir")
+        return JSONResponse({
+            "project_id": slug,
+            "subdir": subdir,
+            "artifacts": projects.list_artifacts(slug, subdir),
+        })
+
+    @app.get("/api/projects/{slug}/artifacts/{subdir}/{filename}")
+    async def api_projects_artifact_read(slug: str, subdir: str, filename: str):
+        """Read one artifact's text content. Used by the per-companion
+        view to render manuscript pages, reference lists, etc."""
+        content = projects.read_artifact(slug, subdir, filename)
+        if content is None:
+            raise HTTPException(404, "artifact not found")
+        return JSONResponse({
+            "project_id": slug,
+            "subdir": subdir,
+            "filename": filename,
+            "content": content,
+        })
 
     # ---- WebSocket broadcaster ------------------------------------------
 

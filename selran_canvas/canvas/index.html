@@ -13,6 +13,19 @@
   <div class="topbar-left">
     <span class="brand">Selran Canvas</span>
     <span id="rev-indicator" title="state revision">·</span>
+    <!-- Project picker: a project ties together one piece of work
+         (a paper, a design, an analysis, a learning track, an exam
+         prep). Switching here re-renders the sidebar's per-companion
+         tabs against this project's <project>/<subdir>/ contents.
+         "+ New" prompts for a name + kind and creates a fresh
+         project at ~/Documents/Selran Projects/<slug>/. -->
+    <label class="control project-picker">
+      <span>Project</span>
+      <select id="project-select" title="Switch project">
+        <option value="">(no project)</option>
+      </select>
+    </label>
+    <button type="button" id="project-new-btn" class="topbar-btn" title="Create a new project">+ New</button>
   </div>
   <div class="topbar-controls">
     <label class="control">
@@ -58,6 +71,25 @@
   </div>
   <article id="page-view" hidden></article>
   <article id="manuscript-view" hidden></article>
+  <!-- Companion artifact view: when the user clicks a companion in
+       the left sidebar, this article replaces the empty/page/manuscript
+       views with a list of files under <project>/<subdir>/. Click a
+       file to load its content into the inline reader at the bottom.
+       Hidden by default; the renderer toggles visibility. -->
+  <article id="companion-view" hidden>
+    <header class="companion-view-header">
+      <h2 id="companion-view-title">Companion</h2>
+      <p id="companion-view-subtitle" class="muted small"></p>
+    </header>
+    <ul id="companion-artifact-list" class="artifact-list"></ul>
+    <section id="companion-artifact-reader" class="artifact-reader" hidden>
+      <header>
+        <h3 id="artifact-reader-name"></h3>
+        <button type="button" id="artifact-reader-close" class="topbar-btn" title="Close">×</button>
+      </header>
+      <pre id="artifact-reader-content"></pre>
+    </section>
+  </article>
 </main>
 
 <div id="bibliography-bar" hidden>

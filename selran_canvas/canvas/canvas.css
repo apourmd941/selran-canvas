@@ -403,3 +403,113 @@ body {
   #sidebar { display: none; }
   #bibliography-bar { display: none; }
 }
+
+/* ---- Project picker (Phase 2 — project hub) ---- */
+.project-picker {
+  /* Sits in the topbar's left side next to the brand. We give it a
+     consistent width so the picker doesn't reflow as project names
+     change length. */
+  min-width: 180px;
+}
+.project-picker select {
+  max-width: 240px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.topbar-btn {
+  background: var(--c-button-bg, #1f2937);
+  color: var(--c-button-fg, #f3f4f6);
+  border: 1px solid var(--c-border, #374151);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.topbar-btn:hover { background: var(--c-button-hover-bg, #374151); }
+
+/* ---- Companion list interactivity ---- */
+/* Companions used to be display-only dots; Phase 2 makes them
+   clickable so each companion loads its project subdirectory into
+   the main view. The .clickable hook gives the cursor + hover
+   affordance without changing the colour scheme. */
+#companion-list li.clickable {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 120ms ease;
+}
+#companion-list li.clickable:hover {
+  background: var(--c-hover-bg, rgba(255,255,255,0.05));
+}
+#companion-list li.active {
+  background: var(--c-accent-bg, rgba(99,102,241,0.18));
+  color: var(--c-accent-fg, #a5b4fc);
+}
+
+/* ---- Companion artifact view ---- */
+#companion-view {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+.companion-view-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-family: var(--font-sans);
+}
+.artifact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--c-border, #2a2a33);
+}
+.artifact-list li {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--c-border, #2a2a33);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.artifact-list li:hover { background: var(--c-hover-bg, rgba(255,255,255,0.04)); }
+.artifact-list .artifact-name { font-weight: 500; }
+.artifact-list .artifact-meta { font-size: 11px; color: var(--c-muted, #9ca3af); }
+.artifact-list-empty {
+  padding: 24px 12px;
+  color: var(--c-muted, #9ca3af);
+  font-style: italic;
+  text-align: center;
+}
+.artifact-reader {
+  border-top: 1px solid var(--c-border, #2a2a33);
+  padding-top: 16px;
+}
+.artifact-reader header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.artifact-reader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-family: var(--font-mono, monospace);
+}
+.artifact-reader pre {
+  background: var(--c-code-bg, #0f1117);
+  color: var(--c-code-fg, #e5e7eb);
+  padding: 16px;
+  border-radius: 6px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 60vh;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
