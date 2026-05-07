@@ -30,6 +30,16 @@ KNOWN_COMPANIONS = {
         "Selran data analysis skill platform/SKILL.md",
         "selran-data-analysis/SKILL.md",
     ],
+    # Sibling-detection paths for selran-librarian. Kept in lockstep
+    # with COMPANION_TO_SUBDIR in projects.py + canvas.js — when one
+    # gains a companion, all three need the matching entry. Without
+    # this row the companion sidebar dot always renders as
+    # "not installed" even when the librarian skill repo is present.
+    "selran-librarian": [
+        "Selran librarian skill/SKILL.md",
+        "Selran librarian/SKILL.md",
+        "selran-librarian/SKILL.md",
+    ],
     "bio-research-pubmed": [
         # MCP plugin — detected via config file, not filesystem
     ],
