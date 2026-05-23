@@ -190,6 +190,70 @@ def build_mcp_server(
         n = store.upsert_references(references or [])
         return {"ok": True, "n_added": n}
 
+    # --- canvas_add_evidence ---------------------------------------------
+
+    @mcp.tool()
+    def canvas_add_evidence(
+        evidence: list[dict],
+        references: list[dict] | None = None,
+        page_id: str | None = None,
+        heading: str = "Evidence",
+    ) -> dict:
+        """Insert highlighted evidence pulled from the Selran Librarian.
+
+        The librarian's `librarian_list_evidence` returns two lists; pass them
+        straight through:
+          - `evidence`: the user's marked passages, each with `citation_id`,
+            `category` (from the highlight color), `page`, and `text`.
+          - `references`: one CSL-JSON per cited paper (id = citation_id).
+
+        The references are added to the bibliography so each `[@cite_id]`
+        resolves; every marked passage becomes a citeable line. If `page_id`
+        is given, an `Evidence` section is appended to that page; otherwise the
+        ready-to-insert markdown is returned for you to place with
+        `canvas_set_page`.
+
+        Returns:
+            {ok, n_refs, citations:[{citation_id, marker, markdown}], page_id?}
+        """
+        items = evidence or []
+        refs = list(references or [])
+        if not refs:  # fall back to any csl_json carried on the items
+            seen: set[str] = set()
+            for it in items:
+                csl = it.get("csl_json")
+                cid = it.get("citation_id") or (csl or {}).get("id")
+                if isinstance(csl, dict) and cid and cid not in seen:
+                    refs.append({**csl, "id": cid})
+                    seen.add(cid)
+        n = store.upsert_references(refs)
+
+        citations: list[dict] = []
+        lines: list[str] = []
+        for it in items:
+            cid = it.get("citation_id") or (it.get("csl_json") or {}).get("id")
+            if not cid:
+                continue
+            text = (it.get("text") or it.get("note") or "").strip()
+            page = it.get("page")
+            category = it.get("category")
+            marker = f"[@{cid}]"
+            pg = f" (p. {page})" if page else ""
+            prefix = f"**{category}** — " if category else ""
+            md = f'- {prefix}“{text}” {marker}{pg}' if text else f"- {marker}{pg}"
+            citations.append({"citation_id": cid, "marker": marker, "markdown": md})
+            lines.append(md)
+
+        result: dict = {"ok": True, "n_refs": n, "citations": citations}
+        if page_id and lines:
+            existing = store.get_page(page_id)
+            body = (existing.content_md + "\n\n") if (existing and existing.content_md) else ""
+            title = existing.title if existing else heading
+            content = f"{body}## {heading}\n\n" + "\n".join(lines) + "\n"
+            store.upsert_page(page_id, title, content)
+            result["page_id"] = page_id
+        return result
+
     # --- canvas_set_journal_style ----------------------------------------
 
     @mcp.tool()

@@ -67,6 +67,7 @@ def test_tool_registry(mcp):
         "canvas_answer_mcq",
         "canvas_get_state",
         "canvas_add_references",
+        "canvas_add_evidence",
         "canvas_set_journal_style",
         "canvas_set_visual_theme",
         "canvas_list_journal_styles",
@@ -246,6 +247,52 @@ def test_add_references_drops_no_id(mcp):
         {"type": "article-journal", "title": "missing id"},  # no id
     ]})
     assert r["n_added"] == 1
+
+
+def test_add_evidence_from_librarian(mcp, store: Store):
+    """Evidence + references from librarian_list_evidence become refs + citation markers."""
+    r = call_tool(mcp, "canvas_add_evidence", {
+        "references": [{"id": "pmid_111", "type": "article-journal", "title": "TXA RCT"}],
+        "evidence": [
+            {"citation_id": "pmid_111", "category": "key result", "page": 4,
+             "text": "OR 0.79, 95% CI 0.66 to 0.94"},
+            {"citation_id": "pmid_111", "category": "population", "page": 2,
+             "text": "1240 trauma patients"},
+        ],
+    })
+    assert r["ok"] is True
+    assert r["n_refs"] == 1
+    assert len(r["citations"]) == 2
+    # Reference landed in the bibliography so [@pmid_111] resolves.
+    assert any(ref.citation_id == "pmid_111" for ref in store.get_references())
+    # Markers are insertable.
+    assert r["citations"][0]["marker"] == "[@pmid_111]"
+    assert "[@pmid_111]" in r["citations"][0]["markdown"]
+
+
+def test_add_evidence_appends_to_page(mcp, store: Store):
+    call_tool(mcp, "canvas_set_page", {"page_id": "results", "title": "Results", "content_md": "Intro."})
+    r = call_tool(mcp, "canvas_add_evidence", {
+        "references": [{"id": "pmid_222", "type": "article-journal", "title": "Study"}],
+        "evidence": [{"citation_id": "pmid_222", "category": "key result", "page": 3, "text": "p = 0.008"}],
+        "page_id": "results",
+    })
+    assert r["page_id"] == "results"
+    body = store.get_page("results").content_md
+    assert "Intro." in body and "## Evidence" in body and "[@pmid_222]" in body
+
+
+def test_add_evidence_falls_back_to_item_csl(mcp, store: Store):
+    """If no separate references list, csl_json carried on items is used."""
+    r = call_tool(mcp, "canvas_add_evidence", {
+        "evidence": [{
+            "citation_id": "pmid_333",
+            "csl_json": {"id": "pmid_333", "type": "article-journal", "title": "X"},
+            "category": "method", "page": 1, "text": "double-blind RCT",
+        }],
+    })
+    assert r["n_refs"] == 1
+    assert any(ref.citation_id == "pmid_333" for ref in store.get_references())
 
 
 def test_set_journal_style(mcp, store: Store):

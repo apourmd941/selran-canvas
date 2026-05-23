@@ -102,7 +102,7 @@ def register(mcp, manifest) -> int:  # noqa: ARG001  (manifest unused — repo p
         store, url = _ensure_canvas_running()
         from selran_canvas.server import build_mcp_server  # local import for failure isolation
         build_mcp_server(store, http_url=url, mcp=mcp)
-        return 8
+        return 9
     except ImportError as e:
         print(
             f"[canvas-plugin] selran_canvas not importable ({e!r}). "
