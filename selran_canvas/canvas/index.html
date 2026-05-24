@@ -97,6 +97,31 @@
   <ol id="bibliography-list"></ol>
 </div>
 
+<!-- Comment layer (v1.1). Select text in a rendered page → a floating
+     "Comment" button appears → click it to open the composer → the note
+     is anchored to the highlighted text and POSTed to /api/comments.
+     Claude reads open comments via canvas_get_state and closes them with
+     canvas_resolve_comment. The panel lists all comments for the doc. -->
+<button type="button" id="comment-bubble" hidden>💬 Comment</button>
+
+<div id="comment-composer" hidden>
+  <div class="comment-composer-anchor" id="comment-composer-anchor"></div>
+  <textarea id="comment-composer-text" rows="3"
+    placeholder="What should change here? e.g. 'tighten this', 'add a limitation about residual confounding'"></textarea>
+  <div class="comment-composer-actions">
+    <button type="button" id="comment-composer-cancel" class="topbar-btn">Cancel</button>
+    <button type="button" id="comment-composer-save" class="topbar-btn primary">Add comment</button>
+  </div>
+</div>
+
+<aside id="comments-panel" hidden>
+  <div class="comments-panel-header">
+    <span>Comments</span>
+    <span id="comments-panel-count" class="comments-panel-count"></span>
+  </div>
+  <ul id="comments-list"></ul>
+</aside>
+
 <div id="toast-stack"></div>
 
 <!--

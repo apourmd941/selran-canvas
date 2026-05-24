@@ -224,6 +224,10 @@
 
     // Render viewer
     renderViewer();
+
+    // Comments panel (open + resolved). Highlights are injected inside
+    // renderSection / renderManuscript after their innerHTML is set.
+    renderCommentsPanel();
   }
 
   function setSelect(sel, value) {
@@ -329,8 +333,11 @@
     let body = renderMarkdownWithCitations(page.content_md, CITEPROC, STATE.references || []);
     body = injectMcqs(body, mcqs);
     html += body;
-    $("#page-view").innerHTML = html;
+    const view = $("#page-view");
+    view.dataset.pageId = pageId;
+    view.innerHTML = html;
     bindMcqHandlers();
+    highlightCommentsIn(view, pageId);
     LAST_RENDERED_PAGE_HTML.set(pageId, body);
   }
 
@@ -349,8 +356,13 @@
         ${body}
       </section>`;
     }).join("");
-    $("#manuscript-view").innerHTML = sections;
+    const view = $("#manuscript-view");
+    view.innerHTML = sections;
     bindMcqHandlers();
+    // Highlight comments per-section (each .ms-page carries data-page-id).
+    view.querySelectorAll(".ms-page[data-page-id]").forEach((sec) => {
+      highlightCommentsIn(sec, sec.dataset.pageId);
+    });
   }
 
   function injectMcqs(html, mcqs) {
@@ -533,6 +545,231 @@
         if (PROJECT_VIEW.companion) refreshCompanionView();
       });
     });
+
+    bindCommentUI();
+  }
+
+  // ---- Comment layer (v1.1) -------------------------------------------
+  //
+  // User → Claude channel (the mirror of MCQs, which are Claude → user).
+  // Select text in a rendered page → floating "Comment" button → composer
+  // → POST /api/comments. The note is anchored to the highlighted text;
+  // Claude reads open comments via canvas_get_state and resolves them with
+  // canvas_resolve_comment after editing.
+
+  let PENDING_SELECTION = null;
+
+  function bindCommentUI() {
+    // Detect text selections inside the page/manuscript views.
+    $("#viewer").addEventListener("mouseup", onViewerMouseUp);
+
+    $("#comment-bubble").addEventListener("mousedown", (e) => {
+      // mousedown (not click) so the selection isn't cleared first.
+      e.preventDefault();
+      openCommentComposer();
+    });
+    $("#comment-composer-cancel").addEventListener("click", closeCommentUI);
+    $("#comment-composer-save").addEventListener("click", submitComment);
+    $("#comment-composer-text").addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submitComment();
+      if (e.key === "Escape") closeCommentUI();
+    });
+
+    // Clicking elsewhere dismisses the floating bubble (but not the
+    // composer, which has explicit Cancel/Save).
+    document.addEventListener("mousedown", (e) => {
+      if (e.target.closest("#comment-bubble, #comment-composer")) return;
+      if (!$("#comment-composer").hidden) return;
+      hideCommentBubble();
+    });
+  }
+
+  function onViewerMouseUp(e) {
+    if (e.target.closest(".mcq-card, #comment-bubble, #comment-composer, #comments-panel")) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) { hideCommentBubble(); return; }
+    const text = sel.toString().trim();
+    if (text.length < 2) { hideCommentBubble(); return; }
+
+    const range = sel.getRangeAt(0);
+    const startEl = range.startContainer.nodeType === 3
+      ? range.startContainer.parentElement
+      : range.startContainer;
+    // In manuscript view each .ms-page carries data-page-id; in section
+    // view #page-view does. Fall back to the resolved current page.
+    const pageEl = startEl && startEl.closest("[data-page-id]");
+    let pageId = pageEl ? pageEl.dataset.pageId : (STATE && STATE.current_page);
+    if (!pageId && STATE && STATE.pages && STATE.pages.length) pageId = STATE.pages[0].page_id;
+    if (!pageId) { hideCommentBubble(); return; }
+
+    PENDING_SELECTION = {
+      page_id: pageId,
+      anchor_text: text,
+      prefix: extractContext(range.startContainer, range.startOffset, -40),
+      suffix: extractContext(range.endContainer, range.endOffset, 40),
+    };
+    showCommentBubble(range.getBoundingClientRect());
+  }
+
+  function extractContext(container, offset, len) {
+    if (!container || container.nodeType !== 3) return "";
+    const t = container.nodeValue || "";
+    return len < 0 ? t.slice(Math.max(0, offset + len), offset) : t.slice(offset, offset + len);
+  }
+
+  function showCommentBubble(rect) {
+    const b = $("#comment-bubble");
+    // position:fixed → viewport coords from getBoundingClientRect directly.
+    b.style.left = `${Math.max(8, rect.left)}px`;
+    b.style.top = `${rect.bottom + 6}px`;
+    b.hidden = false;
+  }
+
+  function hideCommentBubble() {
+    $("#comment-bubble").hidden = true;
+  }
+
+  function openCommentComposer() {
+    if (!PENDING_SELECTION) return;
+    const b = $("#comment-bubble");
+    const c = $("#comment-composer");
+    c.style.left = b.style.left;
+    c.style.top = b.style.top;
+    $("#comment-composer-anchor").textContent = `“${truncate(PENDING_SELECTION.anchor_text, 90)}”`;
+    const ta = $("#comment-composer-text");
+    ta.value = "";
+    c.hidden = false;
+    b.hidden = true;
+    ta.focus();
+  }
+
+  function closeCommentUI() {
+    $("#comment-bubble").hidden = true;
+    $("#comment-composer").hidden = true;
+    PENDING_SELECTION = null;
+  }
+
+  async function submitComment() {
+    if (!PENDING_SELECTION) { closeCommentUI(); return; }
+    const body = $("#comment-composer-text").value.trim();
+    if (!body) { toast("Type a comment first."); return; }
+    try {
+      const r = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...PENDING_SELECTION, body }),
+      });
+      if (!r.ok) { toast(`Couldn't save comment: ${await r.text()}`); return; }
+      toast("Comment added — Claude will see it next turn.");
+    } catch (e) {
+      toast("Network error saving comment.");
+    }
+    closeCommentUI();
+    const sel = window.getSelection();
+    if (sel) sel.removeAllRanges();
+    // WS push re-renders with the new highlight + panel entry.
+  }
+
+  // Wrap the first occurrence of each open comment's anchor text in a
+  // <mark> so the user sees where their notes are pinned. Cross-node
+  // selections (rare) degrade gracefully — they just won't get an inline
+  // highlight, but still appear in the panel.
+  function highlightCommentsIn(rootEl, pageId) {
+    const comments = (STATE && STATE.comments ? STATE.comments : [])
+      .filter((c) => c.page_id === pageId && c.status === "open" && c.anchor_text);
+    for (const c of comments) wrapFirstOccurrence(rootEl, c.anchor_text, c.comment_id);
+  }
+
+  function wrapFirstOccurrence(root, text, commentId) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.parentElement && node.parentElement.closest(".mcq-card, mark.comment-anchor")) continue;
+      const idx = node.nodeValue.indexOf(text);
+      if (idx === -1) continue;
+      const range = document.createRange();
+      range.setStart(node, idx);
+      range.setEnd(node, idx + text.length);
+      const mark = document.createElement("mark");
+      mark.className = "comment-anchor";
+      mark.dataset.commentId = commentId;
+      try {
+        range.surroundContents(mark);
+        mark.onclick = () => focusCommentItem(commentId);
+      } catch (e) {
+        // selection spanned element boundaries — skip inline highlight
+      }
+      return; // first occurrence only
+    }
+  }
+
+  function renderCommentsPanel() {
+    const panel = $("#comments-panel");
+    const list = $("#comments-list");
+    const comments = (STATE && STATE.comments) ? STATE.comments : [];
+    if (!comments.length) { panel.hidden = true; return; }
+    const open = comments.filter((c) => c.status === "open");
+    panel.hidden = false;
+    $("#comments-panel-count").textContent = `${open.length} open`;
+    list.innerHTML = "";
+    for (const c of comments) {
+      const li = document.createElement("li");
+      li.className = `comment-item ${c.status}`;
+      li.dataset.commentId = c.comment_id;
+      const actions = c.status === "open"
+        ? `<button data-act="resolve">Resolve</button><button data-act="dismiss">Dismiss</button>`
+        : `<span class="comment-resolved-tag">✓ resolved</span><button data-act="dismiss">Remove</button>`;
+      li.innerHTML =
+        `<div class="comment-anchor-text">“${escapeHtml(truncate(c.anchor_text, 70))}”</div>` +
+        `<div class="comment-body">${escapeHtml(c.body)}</div>` +
+        `<div class="comment-actions">${actions}</div>`;
+      li.querySelector(".comment-anchor-text").onclick = () => scrollToHighlight(c.comment_id);
+      const rb = li.querySelector('[data-act="resolve"]');
+      if (rb) rb.onclick = () => resolveComment(c.comment_id);
+      li.querySelector('[data-act="dismiss"]').onclick = () => dismissComment(c.comment_id);
+      list.appendChild(li);
+    }
+  }
+
+  function scrollToHighlight(commentId) {
+    const mark = document.querySelector(`mark.comment-anchor[data-comment-id="${commentId}"]`);
+    if (mark) {
+      mark.scrollIntoView({ behavior: "smooth", block: "center" });
+      mark.classList.add("flash");
+      setTimeout(() => mark.classList.remove("flash"), 1200);
+    } else {
+      toast("This comment's text was edited — it may already be addressed.");
+    }
+  }
+
+  function focusCommentItem(commentId) {
+    const item = document.querySelector(`#comments-list .comment-item[data-comment-id="${commentId}"]`);
+    if (item) {
+      item.scrollIntoView({ behavior: "smooth", block: "center" });
+      item.classList.add("flash");
+      setTimeout(() => item.classList.remove("flash"), 1200);
+    }
+  }
+
+  async function resolveComment(commentId) {
+    try {
+      const r = await fetch(`/api/comments/${encodeURIComponent(commentId)}/resolve`, { method: "POST" });
+      if (!r.ok) toast("Couldn't resolve comment.");
+    } catch { toast("Network error."); }
+    // WS push re-renders.
+  }
+
+  async function dismissComment(commentId) {
+    try {
+      const r = await fetch(`/api/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
+      if (!r.ok) toast("Couldn't remove comment.");
+    } catch { toast("Network error."); }
+    // WS push re-renders.
+  }
+
+  function truncate(s, n) {
+    s = String(s || "");
+    return s.length > n ? s.slice(0, n - 1) + "…" : s;
   }
 
   // ---- Project hub (Phase 2) ------------------------------------------

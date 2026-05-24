@@ -83,6 +83,64 @@ def test_answer_unknown_mcq_404(client: TestClient):
     assert r.status_code == 404
 
 
+def test_add_comment_persists(client: TestClient, store: Store):
+    r = client.post("/api/comments", json={
+        "page_id": "intro",
+        "anchor_text": "Body",
+        "body": "make this more specific",
+        "prefix": "",
+        "suffix": " [@ref1]",
+    })
+    assert r.status_code == 200
+    data = r.json()
+    assert data["ok"] is True
+    cid = data["comment_id"]
+    assert cid.startswith("c_")
+
+    state = client.get("/api/state").json()
+    assert len(state["comments"]) == 1
+    c = state["comments"][0]
+    assert c["comment_id"] == cid
+    assert c["anchor_text"] == "Body"
+    assert c["body"] == "make this more specific"
+    assert c["status"] == "open"
+
+
+def test_add_comment_requires_body(client: TestClient):
+    r = client.post("/api/comments", json={"page_id": "intro", "anchor_text": "x", "body": ""})
+    assert r.status_code == 400
+
+
+def test_add_comment_unknown_page_404(client: TestClient):
+    r = client.post("/api/comments", json={
+        "page_id": "nonexistent", "anchor_text": "x", "body": "fix",
+    })
+    assert r.status_code == 404
+
+
+def test_resolve_comment_via_http(client: TestClient, store: Store):
+    c = store.add_comment("intro", "Body", "tighten")
+    r = client.post(f"/api/comments/{c.comment_id}/resolve")
+    assert r.status_code == 200
+    state = client.get("/api/state").json()
+    assert state["comments"][0]["status"] == "resolved"
+
+    # Unknown id → 404
+    bad = client.post("/api/comments/c_nope/resolve")
+    assert bad.status_code == 404
+
+
+def test_delete_comment_via_http(client: TestClient, store: Store):
+    c = store.add_comment("intro", "Body", "remove me")
+    r = client.delete(f"/api/comments/{c.comment_id}")
+    assert r.status_code == 200
+    state = client.get("/api/state").json()
+    assert len(state["comments"]) == 0
+
+    bad = client.delete("/api/comments/c_nope")
+    assert bad.status_code == 404
+
+
 def test_navigate_current_page(client: TestClient, store: Store):
     r = client.post("/api/state/current_page", json={"page_id": "methods"})
     assert r.status_code == 200

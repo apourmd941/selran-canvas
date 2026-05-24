@@ -6,9 +6,9 @@ calls register(mcp, manifest). This function:
   1. Starts the canvas HTTP/WebSocket server in a background thread (idempotent
      — if the port is already bound by a standalone `python -m selran_canvas`
      instance, we use that one and just register the tools).
-  2. Registers the 8 canvas tools onto selran-mcp's FastMCP instance via the
+  2. Registers the 10 canvas tools onto selran-mcp's FastMCP instance via the
      existing `selran_canvas.server.build_mcp_server` helper.
-  3. Returns the count of tools registered (always 8) — selran-mcp shows this
+  3. Returns the count of tools registered (always 10) — selran-mcp shows this
      in `selran-mcp status`.
 
 Failure modes are explicit:
@@ -102,7 +102,7 @@ def register(mcp, manifest) -> int:  # noqa: ARG001  (manifest unused — repo p
         store, url = _ensure_canvas_running()
         from selran_canvas.server import build_mcp_server  # local import for failure isolation
         build_mcp_server(store, http_url=url, mcp=mcp)
-        return 9
+        return 10
     except ImportError as e:
         print(
             f"[canvas-plugin] selran_canvas not importable ({e!r}). "

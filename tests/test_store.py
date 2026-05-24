@@ -103,14 +103,66 @@ def test_listener_notification(store: Store):
 def test_snapshot_dict_shape(store: Store):
     store.upsert_page("p1", "Page 1", "content")
     store.upsert_mcq("m1", "p1", "Q", ["A", "B"])
+    store.add_comment("p1", "content", "tighten this")
     store.upsert_references([{"id": "ref1", "title": "T"}])
 
     snap = store.snapshot_dict()
     assert set(snap.keys()) == {
         "current_page", "journal_style", "visual_theme", "viewing_mode",
-        "companions", "pages", "mcqs", "references", "revision",
+        "companions", "pages", "mcqs", "comments", "references", "revision",
     }
     assert len(snap["pages"]) == 1
     assert len(snap["mcqs"]) == 1
+    assert len(snap["comments"]) == 1
     assert len(snap["references"]) == 1
     assert snap["revision"] > 0
+
+
+def test_comment_workflow(store: Store):
+    store.upsert_page("intro", "Introduction", "We enrolled stage 3 CKD patients.")
+
+    c = store.add_comment(
+        "intro", "stage 3 CKD", "specify the KDIGO criteria",
+        prefix="enrolled ", suffix=" patients",
+    )
+    assert c.status == "open"
+    assert c.comment_id.startswith("c_")
+    assert c.resolved_at is None
+
+    # Visible as open
+    open_comments = store.get_comments(status="open")
+    assert len(open_comments) == 1
+    assert open_comments[0].anchor_text == "stage 3 CKD"
+    assert open_comments[0].body == "specify the KDIGO criteria"
+    assert open_comments[0].prefix == "enrolled "
+
+    # Filter by page
+    assert len(store.get_comments(page_id="intro")) == 1
+    assert len(store.get_comments(page_id="other")) == 0
+
+    # Resolve
+    assert store.resolve_comment(c.comment_id)
+    resolved = store.get_comments(status="resolved")
+    assert len(resolved) == 1
+    assert resolved[0].resolved_at is not None
+    assert len(store.get_comments(status="open")) == 0
+
+    # Resolving an unknown id returns False
+    assert not store.resolve_comment("c_nonexistent")
+
+
+def test_comment_delete_and_page_cascade(store: Store):
+    store.upsert_page("intro", "Introduction", "body text here")
+    c = store.add_comment("intro", "body text", "rewrite")
+    assert len(store.get_comments()) == 1
+
+    # Explicit delete
+    assert store.delete_comment(c.comment_id)
+    assert len(store.get_comments()) == 0
+    assert not store.delete_comment(c.comment_id)  # second time fails
+
+    # Deleting a page cascades to its comments
+    store.add_comment("intro", "body", "x")
+    assert len(store.get_comments()) == 1
+    store.delete_page("intro")
+    assert len(store.get_comments()) == 0

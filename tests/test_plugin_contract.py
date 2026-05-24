@@ -28,6 +28,7 @@ EXPECTED_TOOLS = {
     "canvas_set_page",
     "canvas_ask_mcq",
     "canvas_answer_mcq",
+    "canvas_resolve_comment",
     "canvas_get_state",
     "canvas_add_references",
     "canvas_add_evidence",
@@ -83,19 +84,19 @@ def test_register_function_exists(loaded_plugin):
     assert callable(loaded_plugin.register), "register is not callable"
 
 
-def test_register_returns_nine(loaded_plugin):
-    """register() must return exactly 9 (the canvas tool count)."""
+def test_register_returns_ten(loaded_plugin):
+    """register() must return exactly 10 (the canvas tool count)."""
     host = FastMCP("selran-mcp-test")
     fake_manifest = SimpleNamespace(
         repo_root=Path(__file__).resolve().parent.parent,
         id="canvas",
     )
     n = loaded_plugin.register(host, fake_manifest)
-    assert n == 9, f"register() returned {n}, expected 9"
+    assert n == 10, f"register() returned {n}, expected 10"
 
 
 def test_register_attaches_all_canvas_tools(loaded_plugin):
-    """All 7 expected tools must appear on the supplied FastMCP instance,
+    """All 10 expected tools must appear on the supplied FastMCP instance,
     and every name must start with the `canvas_` prefix per the brief's
     skill_id namespacing rule."""
     host = FastMCP("selran-mcp-test")
@@ -140,4 +141,4 @@ def test_register_is_idempotent(loaded_plugin):
         assert "duplicate" in str(e).lower() or "already" in str(e).lower(), (
             f"unexpected error on second register(): {e!r}"
         )
-    assert n1 == 9
+    assert n1 == 10

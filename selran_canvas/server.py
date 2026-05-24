@@ -1,10 +1,13 @@
-"""FastMCP server exposing 7 tools for Claude.
+"""FastMCP server exposing 10 tools for Claude.
 
 Tools:
     canvas_set_page         — render/update a manuscript page (markdown)
     canvas_ask_mcq          — show an inline MCQ on a page
-    canvas_get_state        — read everything (current page, mcq answers, journal, theme, mode, companions)
+    canvas_answer_mcq       — submit an MCQ answer from chat (mirrors a browser click)
+    canvas_resolve_comment  — mark a user's inline comment resolved after addressing it
+    canvas_get_state        — read everything (pages, mcq answers, comments, journal, theme, mode, companions)
     canvas_add_references   — bulk-add CSL-JSON references to the bibliography
+    canvas_add_evidence     — insert highlighted evidence pulled from the Selran Librarian
     canvas_set_journal_style— select a journal CSL style (e.g., the-new-england-journal-of-medicine)
     canvas_set_visual_theme — select a visual theme (draft | print | reviewer | compact)
     canvas_list_journal_styles — search the manifest
@@ -27,7 +30,7 @@ def build_mcp_server(
     http_url: str,
     mcp: FastMCP | None = None,
 ) -> FastMCP:
-    """Register the 7 canvas tools.
+    """Register the 10 canvas tools.
 
     Two call modes:
         1. Standalone (default) — `mcp=None`: creates a new FastMCP("selran-canvas")
@@ -143,6 +146,37 @@ def build_mcp_server(
         pending_remaining = sum(1 for m in store.get_mcqs() if not m.answer)
         return {"ok": True, "mcq_id": mcq_id, "answer": ans, "pending_remaining": pending_remaining}
 
+    # --- canvas_resolve_comment ------------------------------------------
+
+    @mcp.tool()
+    def canvas_resolve_comment(comment_id: str) -> dict:
+        """Mark a user's inline comment as resolved after addressing it.
+
+        The user selects text in the browser canvas and attaches an
+        instruction ("make this concise", "add a limitation here"). Those
+        comments appear in canvas_get_state() under `comments` with
+        status="open". After you revise the page to address a comment,
+        call this to mark it resolved — the browser pin turns green and
+        the open-comment count drops.
+
+        Workflow each turn:
+          1. canvas_get_state() → read `comments` where status == "open".
+          2. For each open comment: the `anchor_text` is the exact passage
+             the user highlighted; `body` is what they want changed. Revise
+             the relevant page via canvas_set_page.
+          3. canvas_resolve_comment(comment_id) to close it.
+
+        Args:
+            comment_id: the comment's id from canvas_get_state().comments.
+
+        Returns:
+            {ok, comment_id, open_remaining}
+        """
+        if not store.resolve_comment(comment_id):
+            return {"ok": False, "error": f"unknown comment_id '{comment_id}'"}
+        open_remaining = sum(1 for c in store.get_comments() if c.status == "open")
+        return {"ok": True, "comment_id": comment_id, "open_remaining": open_remaining}
+
     # --- canvas_get_state ------------------------------------------------
 
     @mcp.tool()
@@ -153,6 +187,9 @@ def build_mcp_server(
             - journal_style + visual_theme
             - all pages (id, title, position, last-updated)
             - all MCQs with their answers (or null if pending)
+            - all comments (user's inline edit requests; status open|resolved,
+              with the anchored text + instruction body) — address open ones
+              and close them with canvas_resolve_comment
             - all references (CSL-JSON entries, by id)
             - companion_skills detected on this machine
         """

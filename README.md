@@ -15,11 +15,12 @@ When Claude writes a manuscript, the chat sidebar fills up with paragraphs. You 
 - **Claude renders manuscript pages onto a browser canvas at `localhost:15000`** (or the port your `port-registry` app assigns).
 - **Chat stays full-width** for the actual conversation.
 - **Inline MCQ widgets** let Claude propose options ("Should the introduction lead with mechanism or epidemiology? [A/B/C]") that you click to answer — Claude sees your answer on the next turn and rewrites accordingly.
+- **Select-to-comment** — highlight any sentence in a rendered page and attach a note ("tighten this", "add a limitation about residual confounding"). The comment is pinned to that exact text; Claude reads open comments on the next turn, revises, and marks them resolved (the pin turns green). It's the user → Claude mirror of the MCQ flow.
 - **Switch the journal dropdown** and every citation in the document re-formats instantly in that journal's house style — NEJM numeric, Lancet author-date, JBJS specific punctuation, etc.
 - **Three viewing modes**: section-at-a-time (working), full manuscript with page numbers (submission preview), or diff (recent changes highlighted).
 - **Companions**: when `selran-design`, `selran-data-analysis`, or `bio-research:pubmed` are installed, Claude uses them automatically — for journal-house templates, generated figures, or PMID-to-citation lookups. When they aren't, the canvas falls back gracefully and still works.
 
-The canvas is **read-only** by design. Editing is done via MCQ-driven turns with Claude. Click-to-edit ("WYSIWYG") is intentionally deferred — it would require operational-transform / CRDT sync, which is out of scope for v1.
+The canvas is **read-only for prose** by design — Claude writes the words; you direct via chat, MCQs, and now inline comments. Free-form click-to-edit ("WYSIWYG" typing directly into the page) is still deferred — it would require operational-transform / CRDT sync. Select-to-comment delivers most of the directing benefit without that complexity.
 
 ---
 
@@ -29,12 +30,14 @@ The canvas is **read-only** by design. Editing is done via MCQ-driven turns with
 ┌──────────────────────────┐         ┌─────────────────────────┐
 │  Claude (chat)           │         │  Browser canvas         │
 │                          │         │  http://localhost:PORT  │
-│  Calls 8 MCP tools:      │ ──MCP─► │                         │
+│  Calls 10 MCP tools:     │ ──MCP─► │                         │
 │  • canvas_set_page       │         │  • renders pages        │
-│  • canvas_ask_mcq        │         │  • shows MCQs           │
-│  • canvas_answer_mcq     │ ◄──WS── │  • style + theme picker │
+│  • canvas_ask_mcq        │         │  • shows MCQs            │
+│  • canvas_answer_mcq     │ ◄──WS── │  • select-to-comment    │
+│  • canvas_resolve_comment│         │  • style + theme picker │
 │  • canvas_get_state      │         │  • citeproc-js for CSL  │
 │  • canvas_add_references │         │  • bibliography panel   │
+│  • canvas_add_evidence   │         │                         │
 │  • canvas_set_journal_…  │         │                         │
 │  • canvas_set_visual_…   │         │                         │
 │  • canvas_list_journal_… │         └─────────────────────────┘
@@ -85,7 +88,7 @@ python -m selran_canvas.fetch_styles --category orthopaedics  # one category
 ```bash
 python -m selran_canvas --info     # show URL + port + DB path
 python -m selran_canvas --demo     # seed a 3-page test manuscript and open browser
-python -m pytest tests/            # 48 tests should pass (CI runs them on Linux/macOS/Windows × Python 3.10/3.11/3.12)
+python -m pytest tests/            # 60 tests should pass (CI runs them on Linux/macOS/Windows × Python 3.10/3.11/3.12)
 ```
 
 ---
@@ -116,7 +119,7 @@ Then **⌘Q Claude desktop and reopen.** In a new conversation:
 Call selran_status and tell me which Selran skills are connected.
 ```
 
-You should see `canvas` listed with 8 tools. From that point on, any conversation can call `canvas_set_page`, `canvas_ask_mcq`, `canvas_get_state`, etc., and the browser canvas at `http://localhost:15000` (or `SELRAN_CANVAS_PORT`) will reflect every change live.
+You should see `canvas` listed with 10 tools. From that point on, any conversation can call `canvas_set_page`, `canvas_ask_mcq`, `canvas_get_state`, etc., and the browser canvas at `http://localhost:15000` (or `SELRAN_CANVAS_PORT`) will reflect every change live.
 
 ### Path 2 — direct `mcpServers` entry (Claude Code without selran-mcp)
 
@@ -134,7 +137,7 @@ If you don't have `selran-mcp` and just want canvas as a standalone MCP plugin, 
 }
 ```
 
-Restart Claude Code. The canvas's 8 tools become available. Open `http://localhost:11999` (or whichever port) to see the canvas.
+Restart Claude Code. The canvas's 10 tools become available. Open `http://localhost:11999` (or whichever port) to see the canvas.
 
 ### Both paths share the same SQLite store
 
@@ -188,15 +191,17 @@ Total: **100 journals**, plus generic Vancouver + APA. Anything outside this lis
 
 ---
 
-## The 8 MCP tools
+## The 10 MCP tools
 
 | Tool | Description |
 |---|---|
 | `canvas_set_page(page_id, title, content_md)` | Render/update a page. Markdown supports `[@cite_id]` citation markers, tables, code, images, and `<!--mcq:foo-->` MCQ anchors. |
 | `canvas_ask_mcq(mcq_id, page_id, question, options, anchor?)` | Show an inline MCQ on a page. 2–6 options. Anchor at a `<!--mcq:foo-->` marker if present, else at the end of the page. |
 | `canvas_answer_mcq(mcq_id, answer)` | Submit an MCQ answer from chat (mirror of clicking the option in the browser). When the user types a single letter A–F in chat, forward it via this tool — the browser canvas updates live and the answer joins `canvas_get_state()` like any other. |
-| `canvas_get_state()` | Read everything: current page, viewing mode, journal style, theme, all pages, all MCQ answers, all references, detected companion skills. Call this first thing each turn. |
+| `canvas_resolve_comment(comment_id)` | Mark a user's inline comment resolved after addressing the requested edit. Users select text in the browser and attach a note; open comments appear in `canvas_get_state().comments` with the anchored text + instruction. Revise the page, then resolve — the browser pin turns green. |
+| `canvas_get_state()` | Read everything: current page, viewing mode, journal style, theme, all pages, all MCQ answers, all comments (open/resolved with anchored text + body), all references, detected companion skills. Call this first thing each turn. |
 | `canvas_add_references(refs)` | Bulk-add CSL-JSON entries. Each must have an `id` (matches `[@id]` markers in markdown). Re-using an id replaces the entry. |
+| `canvas_add_evidence(evidence, references?, page_id?, heading?)` | Insert highlighted evidence pulled from the Selran Librarian. Pass the librarian's marked passages + their CSL-JSON; references join the bibliography and each passage becomes a citeable line, optionally appended to a page as an `Evidence` section. |
 | `canvas_set_journal_style(style_id)` | Switch journal — instantly reformats every citation. IDs match Zotero CSL repo (`the-new-england-journal-of-medicine`, `the-lancet`, `the-journal-of-bone-and-joint-surgery`, etc.). |
 | `canvas_set_visual_theme(theme_id)` | `draft` (default working) • `print` (submission preview) • `reviewer` (track-changes-style) • `compact` |
 | `canvas_list_journal_styles(query?)` | Search the manifest. Empty query returns all 100. |
@@ -273,11 +278,11 @@ rm ~/.selran-canvas/canvas_state.db
 
 **v1.0 (initial release)** — 7 MCP tools, page rendering with `[@cite]` markers, MCQ widgets with `<!--mcq:anchor-->` placement, citeproc-js processing 100 journal styles, companion-skill detection (graceful fallback), three viewing modes (section / manuscript with page numbers / diff), four visual themes (draft / print / reviewer / compact), SQLite-persisted state, vendored CDN libs (offline-first), 46 passing pytest tests, all 78 unique CSL files bundled in repo, **cross-OS CI** (GitHub Actions matrix: Linux/macOS/Windows × Python 3.10/3.11/3.12 = 9 jobs, every push and PR), Path B `selran-mcp` plugin (`canvas_mcp_plugin/__init__.py`) with regression-locked contract tests so the unified-server discovery never silently breaks.
 
-**v1.0.1 (current)** — Adds an 8th MCP tool, `canvas_answer_mcq(mcq_id, answer)`, that lets users answer MCQs by typing a single letter A–F in chat instead of (or in addition to) clicking in the browser. Both routes write to the same SQLite store, so the canvas card flips to "answered" live either way. Paired with three new "chat-side signals" conventions in the writer skill — session-start status line, per-turn compact badge, and an MCQ chat-mirror — so canvas activity surfaces in chat without flooding it. 48 passing pytest tests (added two for the new tool's input validation and chat-side answering flow).
+**v1.0.1** — Added `canvas_answer_mcq(mcq_id, answer)`, letting users answer MCQs by typing a single letter A–F in chat instead of (or in addition to) clicking in the browser. Both routes write to the same SQLite store, so the canvas card flips to "answered" live either way. Paired with three "chat-side signals" conventions in the writer skill — session-start status line, per-turn compact badge, and an MCQ chat-mirror.
 
-**v1.1 (next)** — print-to-PDF button, "lock page" so Claude doesn't overwrite work in progress, history/undo (page version snapshots), keyboard shortcut to next pending MCQ, persistent journal-style + theme + mode preferences across sessions.
+**v1.1 (current)** — Project hub UI (project picker + clickable companions + per-companion artifact view) and two new MCP tools: `canvas_add_evidence` (pulls highlighted passages + CSL-JSON from the Selran Librarian into the bibliography and page) and **`canvas_resolve_comment`** powering the **select-to-comment layer** — users highlight text in a rendered page and attach an instruction; the note is anchored to that text (text-quote anchoring), appears in `canvas_get_state().comments`, and Claude resolves it after editing (the browser pin turns green). 10 MCP tools total. 60 passing pytest tests. Still planned for the v1.1 line: print-to-PDF, "lock page", history/undo, keyboard shortcut to next pending MCQ, persistent style/theme/mode preferences.
 
-**v1.2 (later)** — click-to-edit a sentence with conflict-resolved sync (operational transforms or CRDTs). This is the "Google Docs" upgrade — significant scope, deferred until needed.
+**v1.2 (later)** — free-form click-to-edit a sentence with conflict-resolved sync (operational transforms or CRDTs). This is the "Google Docs" upgrade — significant scope, deferred until needed. Select-to-comment (shipped in v1.1) covers most of the directing need without it.
 
 **v1.3+ (further out)** — collaborative multi-user sessions, structured outline/heading nav, smart figures (markdown-defined Mermaid + plain-language → Mermaid via Claude), CONSORT-flow / PRISMA-flow / SoA Schedule-of-Activities widget primitives.
 

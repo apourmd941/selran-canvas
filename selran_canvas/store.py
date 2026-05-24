@@ -3,6 +3,7 @@
 Schema:
     pages         (page_id PK, position, title, content_md, updated_at)
     mcqs          (mcq_id PK, page_id FK, question, options_json, answer, anchor, asked_at, answered_at)
+    comments      (comment_id PK, page_id FK, anchor_text, prefix, suffix, body, status, created_at, resolved_at)
     references    (citation_id PK, csl_json, added_at)
     kv            (key PK, value)         # singleton config (current_page, journal_style, theme, mode)
 
@@ -16,6 +17,7 @@ import json
 import sqlite3
 import threading
 import time
+import uuid
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -39,6 +41,17 @@ CREATE TABLE IF NOT EXISTS mcqs (
     asked_at     REAL NOT NULL,
     answered_at  REAL
 );
+CREATE TABLE IF NOT EXISTS comments (
+    comment_id  TEXT PRIMARY KEY,
+    page_id     TEXT NOT NULL,
+    anchor_text TEXT NOT NULL,
+    prefix      TEXT,
+    suffix      TEXT,
+    body        TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'open',
+    created_at  REAL NOT NULL,
+    resolved_at REAL
+);
 CREATE TABLE IF NOT EXISTS refs (
     citation_id TEXT PRIMARY KEY,
     csl_json    TEXT NOT NULL,
@@ -49,6 +62,7 @@ CREATE TABLE IF NOT EXISTS kv (
     value TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_mcqs_page ON mcqs(page_id);
+CREATE INDEX IF NOT EXISTS idx_comments_page ON comments(page_id);
 """
 
 DEFAULTS_KV = {
@@ -82,6 +96,19 @@ class Mcq:
 
 
 @dataclass
+class Comment:
+    comment_id: str
+    page_id: str
+    anchor_text: str       # exact text the user highlighted in the rendered page
+    prefix: str | None     # a few chars before the selection (disambiguation context)
+    suffix: str | None     # a few chars after the selection
+    body: str              # the user's instruction ("make this concise", "add a limitation…")
+    status: str            # "open" | "resolved"
+    created_at: float
+    resolved_at: float | None
+
+
+@dataclass
 class Reference:
     citation_id: str
     csl: dict
@@ -97,6 +124,7 @@ class State:
     companions: dict[str, bool]
     pages: list[Page] = field(default_factory=list)
     mcqs: list[Mcq] = field(default_factory=list)
+    comments: list[Comment] = field(default_factory=list)
     references: list[Reference] = field(default_factory=list)
 
 
@@ -208,6 +236,7 @@ class Store:
         with self._connect() as cx:
             cx.execute("DELETE FROM pages WHERE page_id=?", (page_id,))
             cx.execute("DELETE FROM mcqs WHERE page_id=?", (page_id,))
+            cx.execute("DELETE FROM comments WHERE page_id=?", (page_id,))
         self._bump()
 
     # ---- MCQs -----------------------------------------------------------
@@ -265,6 +294,83 @@ class Store:
                 for r in rows
             ]
 
+    # ---- Comments -------------------------------------------------------
+    #
+    # Comments are the user → Claude channel: the user selects text in the
+    # rendered page and attaches an instruction ("make this concise", "add
+    # a limitation here"). It mirrors the MCQ flow (which is Claude → user)
+    # in reverse. The browser POSTs a comment; Claude reads open comments
+    # via canvas_get_state and resolves them via canvas_resolve_comment
+    # after addressing the edit.
+
+    def add_comment(
+        self,
+        page_id: str,
+        anchor_text: str,
+        body: str,
+        prefix: str | None = None,
+        suffix: str | None = None,
+    ) -> Comment:
+        """Create a comment anchored to selected text on a page. The
+        comment_id is server-generated (the browser doesn't supply one,
+        unlike MCQs whose ids come from Claude)."""
+        now = time.time()
+        comment_id = "c_" + uuid.uuid4().hex[:12]
+        with self._connect() as cx:
+            cx.execute(
+                "INSERT INTO comments(comment_id, page_id, anchor_text, prefix, suffix, body, status, created_at) "
+                "VALUES(?, ?, ?, ?, ?, ?, 'open', ?)",
+                (comment_id, page_id, anchor_text, prefix, suffix, body, now),
+            )
+        self._bump()
+        return Comment(comment_id, page_id, anchor_text, prefix, suffix, body, "open", now, None)
+
+    def resolve_comment(self, comment_id: str) -> bool:
+        """Mark a comment resolved (Claude calls this after addressing the
+        edit; the browser turns the pin green)."""
+        now = time.time()
+        with self._connect() as cx:
+            cur = cx.execute(
+                "UPDATE comments SET status='resolved', resolved_at=? WHERE comment_id=?",
+                (now, comment_id),
+            )
+            ok = cur.rowcount > 0
+        if ok:
+            self._bump()
+        return ok
+
+    def delete_comment(self, comment_id: str) -> bool:
+        """Remove a comment entirely (user dismisses it without action)."""
+        with self._connect() as cx:
+            cur = cx.execute("DELETE FROM comments WHERE comment_id=?", (comment_id,))
+            ok = cur.rowcount > 0
+        if ok:
+            self._bump()
+        return ok
+
+    def get_comments(self, page_id: str | None = None, status: str | None = None) -> list[Comment]:
+        sql = "SELECT * FROM comments"
+        clauses: list[str] = []
+        params: list[Any] = []
+        if page_id is not None:
+            clauses.append("page_id=?")
+            params.append(page_id)
+        if status is not None:
+            clauses.append("status=?")
+            params.append(status)
+        if clauses:
+            sql += " WHERE " + " AND ".join(clauses)
+        sql += " ORDER BY created_at ASC"
+        with self._connect() as cx:
+            rows = cx.execute(sql, tuple(params)).fetchall()
+            return [
+                Comment(
+                    r["comment_id"], r["page_id"], r["anchor_text"], r["prefix"], r["suffix"],
+                    r["body"], r["status"], r["created_at"], r["resolved_at"],
+                )
+                for r in rows
+            ]
+
     # ---- References -----------------------------------------------------
 
     def upsert_references(self, refs: Iterable[dict]) -> int:
@@ -308,6 +414,7 @@ class Store:
             companions=json.loads(self.get_kv("companions_json") or "{}"),
             pages=self.get_pages(),
             mcqs=self.get_mcqs(),
+            comments=self.get_comments(),
             references=self.get_references(),
         )
 
@@ -321,6 +428,7 @@ class Store:
             "companions": s.companions,
             "pages": [asdict(p) for p in s.pages],
             "mcqs": [asdict(m) for m in s.mcqs],
+            "comments": [asdict(c) for c in s.comments],
             "references": [asdict(r) for r in s.references],
             "revision": self.revision(),
         }

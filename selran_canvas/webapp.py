@@ -8,6 +8,9 @@ Endpoints:
     GET  /api/csl/style/{id}.csl → bundled or lazy-fetched CSL style
     GET  /api/csl/styles[?q=]    → search the manifest
     POST /api/mcq/{id}/answer    → user submits an MCQ answer (browser only)
+    POST /api/comments           → user attaches a comment to selected text (browser only)
+    POST /api/comments/{id}/resolve → mark a comment resolved (browser only)
+    DELETE /api/comments/{id}    → user dismisses a comment (browser only)
     POST /api/state/current_page → user navigates to a page (browser only)
     POST /api/state/journal_style → user picks a journal (browser only)
     POST /api/state/visual_theme  → user picks a theme (browser only)
@@ -95,6 +98,42 @@ def build_webapp(store: Store) -> FastAPI:
             raise HTTPException(400, "missing answer")
         if not store.answer_mcq(mcq_id, ans):
             raise HTTPException(404, f"unknown mcq {mcq_id}")
+        return {"ok": True}
+
+    @app.post("/api/comments")
+    async def add_comment(payload: dict):
+        """User selected text in the rendered page and attached an
+        instruction. The browser sends page_id + the highlighted text
+        (+ optional prefix/suffix for re-anchoring) + the comment body.
+        Claude sees it on the next canvas_get_state and addresses it."""
+        page_id = (payload.get("page_id") or "").strip()
+        anchor_text = (payload.get("anchor_text") or "").strip()
+        body = (payload.get("body") or "").strip()
+        if not page_id:
+            raise HTTPException(400, "page_id is required")
+        if not body:
+            raise HTTPException(400, "comment body is required")
+        if not store.get_page(page_id):
+            raise HTTPException(404, f"unknown page {page_id}")
+        c = store.add_comment(
+            page_id=page_id,
+            anchor_text=anchor_text,
+            body=body,
+            prefix=payload.get("prefix"),
+            suffix=payload.get("suffix"),
+        )
+        return {"ok": True, "comment_id": c.comment_id}
+
+    @app.post("/api/comments/{comment_id}/resolve")
+    async def resolve_comment(comment_id: str):
+        if not store.resolve_comment(comment_id):
+            raise HTTPException(404, f"unknown comment {comment_id}")
+        return {"ok": True}
+
+    @app.delete("/api/comments/{comment_id}")
+    async def delete_comment(comment_id: str):
+        if not store.delete_comment(comment_id):
+            raise HTTPException(404, f"unknown comment {comment_id}")
         return {"ok": True}
 
     @app.post("/api/state/current_page")

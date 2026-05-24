@@ -65,6 +65,7 @@ def test_tool_registry(mcp):
         "canvas_set_page",
         "canvas_ask_mcq",
         "canvas_answer_mcq",
+        "canvas_resolve_comment",
         "canvas_get_state",
         "canvas_add_references",
         "canvas_add_evidence",
@@ -209,6 +210,37 @@ def test_answer_mcq_validates_input(mcp, store: Store):
     r = call_tool(mcp, "canvas_answer_mcq", {"mcq_id": "nonexistent", "answer": "A"})
     assert r["ok"] is False
     assert "unknown mcq_id" in r["error"]
+
+
+def test_resolve_comment_from_chat(mcp, store: Store):
+    """canvas_resolve_comment closes a user's inline comment after Claude
+    addresses the requested edit. Comments are created browser-side (via the
+    store), so we seed them through the store directly here."""
+    call_tool(mcp, "canvas_set_page", {"page_id": "p", "title": "P", "content_md": "x"})
+    c1 = store.add_comment("p", "stage 3 CKD", "make this more precise")
+    c2 = store.add_comment("p", "p=0.078", "round to two decimals")
+
+    # Both show up as open in the state snapshot.
+    state = call_tool(mcp, "canvas_get_state", {})
+    assert len(state["comments"]) == 2
+    assert all(c["status"] == "open" for c in state["comments"])
+
+    # Resolve the first.
+    r = call_tool(mcp, "canvas_resolve_comment", {"comment_id": c1.comment_id})
+    assert r["ok"] is True
+    assert r["comment_id"] == c1.comment_id
+    assert r["open_remaining"] == 1  # c2 still open
+
+    # Resolve the second.
+    r = call_tool(mcp, "canvas_resolve_comment", {"comment_id": c2.comment_id})
+    assert r["ok"] is True
+    assert r["open_remaining"] == 0
+
+
+def test_resolve_comment_unknown_id(mcp, store: Store):
+    r = call_tool(mcp, "canvas_resolve_comment", {"comment_id": "nope"})
+    assert r["ok"] is False
+    assert "unknown comment_id" in r["error"]
 
 
 def test_get_state_returns_full_snapshot(mcp, store: Store):
