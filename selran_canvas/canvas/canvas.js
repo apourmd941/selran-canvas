@@ -330,6 +330,7 @@
     const page = STATE.pages.find((p) => p.page_id === pageId);
     const mcqs = (STATE.mcqs || []).filter((m) => m.page_id === pageId);
     let html = `<h1>${escapeHtml(page.title)}</h1>`;
+    html += guidanceNoteHtml(page);
     let body = renderMarkdownWithCitations(page.content_md, CITEPROC, STATE.references || []);
     body = injectMcqs(body, mcqs);
     html += body;
@@ -353,6 +354,7 @@
       LAST_RENDERED_PAGE_HTML.set(p.page_id, body);
       return `<section class="ms-page" data-page-num="p. ${idx + 1}" data-page-id="${p.page_id}">
         <h1>${escapeHtml(p.title)}</h1>
+        ${guidanceNoteHtml(p)}
         ${body}
       </section>`;
     }).join("");
@@ -380,6 +382,20 @@
       }
     }
     return out + tail.join("");
+  }
+
+  // Collapsible "what this section should contain" note, shown atop a page
+  // that was scaffolded from a template. Uses a native <details> so it's
+  // collapsible with zero JS; open by default on an empty page (so the user
+  // sees the guidance), collapsed once the section has content.
+  function guidanceNoteHtml(page) {
+    if (!page || !page.guidance) return "";
+    const hasContent = (page.content_md || "").trim().length > 0;
+    const open = hasContent ? "" : "open";
+    return `<details class="guidance-note" ${open}>
+      <summary>📝 What this section should contain</summary>
+      <div class="guidance-note-body">${escapeHtml(page.guidance)}</div>
+    </details>`;
   }
 
   function mcqCardHtml(m) {
@@ -480,6 +496,16 @@
       });
     });
     $("#journal-search").addEventListener("input", (e) => populateJournalSelect(e.target.value));
+
+    // Template picker: choosing a template scaffolds its section pages
+    // (each with a collapsible guidance note). The select resets to the
+    // placeholder afterward so it reads as an action, not a sticky setting.
+    $("#template-select").addEventListener("change", async (e) => {
+      const id = e.target.value;
+      e.target.value = "";
+      if (!id) return;
+      await scaffoldTemplate(id);
+    });
 
     // Project picker: switching the dropdown sets the new current
     // project on the server, then re-fetches so the sidebar +
@@ -921,12 +947,70 @@
     catch { return iso; }
   }
 
+  // ---- Templates ------------------------------------------------------
+
+  async function loadTemplates() {
+    const sel = $("#template-select");
+    if (!sel) return;
+    let items = [];
+    try {
+      const r = await fetch("/api/templates");
+      if (r.ok) items = (await r.json()).templates || [];
+    } catch (e) { /* writer skill not present — leave dropdown minimal */ }
+
+    // Reset to just the placeholder, then group paper vs grant.
+    sel.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = items.length ? "(choose template…)" : "(no templates found)";
+    sel.appendChild(placeholder);
+
+    const groups = { paper: [], grant: [] };
+    for (const t of items) (groups[t.category] || (groups[t.category] = [])).push(t);
+    const labels = { paper: "Paper types", grant: "Grant mechanisms" };
+    for (const cat of Object.keys(labels)) {
+      if (!groups[cat] || !groups[cat].length) continue;
+      const og = document.createElement("optgroup");
+      og.label = labels[cat];
+      for (const t of groups[cat]) {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        const guide = t.reporting_guideline ? ` · ${t.reporting_guideline}` : "";
+        opt.textContent = `${t.title} (${t.n_sections} sections)`;
+        opt.title = `${t.description || t.title}${guide}`;
+        og.appendChild(opt);
+      }
+      sel.appendChild(og);
+    }
+  }
+
+  async function scaffoldTemplate(templateId) {
+    try {
+      const r = await fetch(`/api/templates/${encodeURIComponent(templateId)}/scaffold`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!r.ok) { toast(`Couldn't scaffold template: ${await r.text()}`); return; }
+      const d = await r.json();
+      const made = d.created.length;
+      const skipped = d.skipped.length;
+      let msg = `Scaffolded "${d.title}" — ${made} section${made === 1 ? "" : "s"}`;
+      if (skipped) msg += ` (${skipped} already existed, left untouched)`;
+      toast(msg);
+      // WS push re-renders with the new pages + their guidance notes.
+    } catch (e) {
+      toast("Network error scaffolding template.");
+    }
+  }
+
   // ---- Boot ----
   async function boot() {
     await fetchManifest();
     bindControls();
     await loadLocale();
     await loadProjects();
+    await loadTemplates();
     connectWS();
   }
   boot();

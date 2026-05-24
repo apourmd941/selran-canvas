@@ -118,6 +118,45 @@ def test_snapshot_dict_shape(store: Store):
     assert snap["revision"] > 0
 
 
+def test_page_guidance_preserved_on_update(store: Store):
+    # Scaffold-style create with a guidance note.
+    p = store.upsert_page("rct__methods", "Methods", "", guidance="Describe the design.")
+    assert p.guidance == "Describe the design."
+
+    # Claude fills content without passing guidance → note preserved.
+    p2 = store.upsert_page("rct__methods", "Methods", "We did a parallel RCT.")
+    assert p2.content_md == "We did a parallel RCT."
+    assert p2.guidance == "Describe the design."
+
+    # Explicit "" clears it.
+    p3 = store.upsert_page("rct__methods", "Methods", "We did a parallel RCT.", guidance="")
+    assert p3.guidance == ""
+
+
+def test_scaffold_pages(store: Store):
+    specs = [
+        {"page_id": "rct__abstract", "title": "Abstract", "guidance": "Structured, ~250 words."},
+        {"page_id": "rct__methods", "title": "Methods", "guidance": "10 subsections."},
+    ]
+    result = store.scaffold_pages(specs)
+    assert result["created"] == ["rct__abstract", "rct__methods"]
+    assert result["skipped"] == []
+
+    pages = store.get_pages()
+    assert [p.page_id for p in pages] == ["rct__abstract", "rct__methods"]
+    assert pages[0].content_md == ""
+    assert pages[0].guidance == "Structured, ~250 words."
+    # First scaffolded section becomes current.
+    assert store.get_kv("current_page") == "rct__abstract"
+
+    # Re-scaffolding skips existing pages (never overwrites drafted content).
+    store.upsert_page("rct__abstract", "Abstract", "Real abstract text.")
+    result2 = store.scaffold_pages(specs)
+    assert result2["created"] == []
+    assert set(result2["skipped"]) == {"rct__abstract", "rct__methods"}
+    assert store.get_page("rct__abstract").content_md == "Real abstract text."
+
+
 def test_comment_workflow(store: Store):
     store.upsert_page("intro", "Introduction", "We enrolled stage 3 CKD patients.")
 

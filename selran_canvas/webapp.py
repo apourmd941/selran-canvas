@@ -16,6 +16,9 @@ Endpoints:
     POST /api/state/visual_theme  → user picks a theme (browser only)
     POST /api/state/viewing_mode  → user toggles section/manuscript/diff (browser only)
 
+    GET  /api/templates          → list writer templates for the dropdown
+    POST /api/templates/{id}/scaffold → create this template's section pages
+
     GET  /api/projects                            → list all projects
     POST /api/projects                            → create a project
     GET  /api/projects/current                    → which is "open"
@@ -35,7 +38,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import projects
+from . import projects, templates
 from .config import CANVAS_DIR
 from .csl_index import get_locale, get_style_xml, list_styles
 from .store import Store
@@ -162,6 +165,46 @@ def build_webapp(store: Store) -> FastAPI:
     @app.get("/api/health")
     async def health():
         return {"ok": True, "revision": store.revision()}
+
+    # ---- Templates -------------------------------------------------------
+    #
+    # The writer skill authors the templates manifest; canvas reads it via
+    # a sibling-scan (templates.py). The dropdown lists them; picking one
+    # scaffolds its section pages — each empty but topped with a collapsible
+    # "what this section should contain" guidance note. Claude then fills the
+    # content below the note (the note persists across canvas_set_page calls).
+
+    @app.get("/api/templates")
+    async def api_templates():
+        return JSONResponse({"templates": templates.list_templates()})
+
+    @app.post("/api/templates/{template_id}/scaffold")
+    async def api_template_scaffold(template_id: str, payload: dict | None = None):
+        tmpl = templates.get_template(template_id)
+        if tmpl is None:
+            raise HTTPException(404, f"unknown template '{template_id}'")
+        sections = tmpl.get("sections") or []
+        if not sections:
+            raise HTTPException(400, f"template '{template_id}' has no sections")
+        # Namespace page ids by template so two templates' "methods" don't
+        # collide, but keep them readable.
+        specs = [
+            {
+                "page_id": f"{template_id}__{s.get('id')}",
+                "title": s.get("title") or s.get("id"),
+                "guidance": s.get("guidance"),
+            }
+            for s in sections
+            if s.get("id")
+        ]
+        result = store.scaffold_pages(specs)
+        return JSONResponse({
+            "ok": True,
+            "template_id": template_id,
+            "title": tmpl.get("title"),
+            "created": result["created"],
+            "skipped": result["skipped"],
+        })
 
     # ---- Project endpoints ----------------------------------------------
     #

@@ -26,6 +26,16 @@
       </select>
     </label>
     <button type="button" id="project-new-btn" class="topbar-btn" title="Create a new project">+ New</button>
+    <!-- Template picker: choose a manuscript/grant template (RCT, systematic
+         review, NIH R01, …) authored in the writer skill. Picking one
+         scaffolds the section pages, each topped with a collapsible note
+         on what that section should contain. Claude fills the content. -->
+    <label class="control template-picker">
+      <span>Template</span>
+      <select id="template-select" title="Scaffold a manuscript/grant template">
+        <option value="">(choose template…)</option>
+      </select>
+    </label>
   </div>
   <div class="topbar-controls">
     <label class="control">

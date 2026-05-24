@@ -259,6 +259,43 @@ body {
 [data-mode="manuscript"] #page-view, [data-mode="diff"] #page-view { display: none; }
 [data-mode="manuscript"] #manuscript-view, [data-mode="diff"] #manuscript-view { display: block; }
 
+/* ---- Template picker + scaffolded-section guidance note ---- */
+.template-picker { min-width: 160px; }
+.template-picker select { max-width: 220px; }
+
+.guidance-note {
+  background: var(--c-accent-soft);
+  border: 1px solid #c7d7ee;
+  border-left: 4px solid var(--c-accent);
+  border-radius: var(--radius);
+  margin: 0 0 18px;
+  padding: 6px 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.guidance-note > summary {
+  cursor: pointer;
+  color: var(--c-accent);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 4px 0;
+  list-style: none;
+  user-select: none;
+}
+.guidance-note > summary::-webkit-details-marker { display: none; }
+.guidance-note > summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.1s;
+}
+.guidance-note[open] > summary::before { content: "▾ "; }
+.guidance-note-body {
+  color: var(--c-text);
+  line-height: 1.5;
+  padding: 4px 0 8px;
+  white-space: pre-wrap;
+}
+
 /* ---- MCQ cards ---- */
 .mcq-card {
   background: var(--c-mcq-pending);

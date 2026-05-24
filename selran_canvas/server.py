@@ -54,24 +54,31 @@ def build_mcp_server(
         page_id: str,
         title: str,
         content_md: str,
+        guidance: str | None = None,
     ) -> dict:
         """Render or update a page on the canvas.
 
         Args:
             page_id: stable identifier (e.g. "introduction", "methods", "results"). Reusing
                 an id updates that page in place; new ids are appended in document order.
+                Template-scaffolded pages use ids like "rct__methods" — fill those in place
+                (keep the same page_id) so the section's guidance note is preserved.
             title: human-readable page title (shown in sidebar nav).
             content_md: GitHub-flavored Markdown. Use `[@cite_id]` markers for citations
                 — citeproc will format them in the chosen journal style. Tables and
                 fenced code blocks are supported. Embed images with the standard
                 `![alt](data:image/png;base64,...)` syntax or as URLs.
+            guidance: optional "what this section should contain" note shown as a
+                collapsible banner atop the page. Omit (None) to keep any existing
+                note untouched — the normal case when filling a scaffolded page. Pass
+                "" to clear it, or a string to set/replace it.
 
         Returns:
             {ok, page_id, position, canvas_url}
         """
         if not page_id or not page_id.replace("_", "").replace("-", "").isalnum():
             return {"ok": False, "error": "page_id must be alphanumeric/underscore/hyphen"}
-        page = store.upsert_page(page_id, title, content_md)
+        page = store.upsert_page(page_id, title, content_md, guidance=guidance)
         # If no current page is set, default to this one
         if not store.get_kv("current_page"):
             store.set_kv("current_page", page_id)

@@ -1,7 +1,7 @@
 """SQLite-backed state store.
 
 Schema:
-    pages         (page_id PK, position, title, content_md, updated_at)
+    pages         (page_id PK, position, title, content_md, guidance, updated_at)
     mcqs          (mcq_id PK, page_id FK, question, options_json, answer, anchor, asked_at, answered_at)
     comments      (comment_id PK, page_id FK, anchor_text, prefix, suffix, body, status, created_at, resolved_at)
     references    (citation_id PK, csl_json, added_at)
@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS pages (
     position    INTEGER NOT NULL,
     title       TEXT NOT NULL,
     content_md  TEXT NOT NULL,
+    guidance    TEXT,
     updated_at  REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS mcqs (
@@ -81,6 +82,7 @@ class Page:
     title: str
     content_md: str
     updated_at: float
+    guidance: str | None = None  # "what this section should look like" note (from a template scaffold)
 
 
 @dataclass
@@ -146,6 +148,12 @@ class Store:
         with self._connect() as cx:
             cx.executescript(SCHEMA)
             cx.execute("PRAGMA journal_mode=WAL;")
+            # Migration: older DBs predate the pages.guidance column. ADD it
+            # if missing so upgrading an existing ~/.selran-canvas/canvas_state.db
+            # doesn't error on the new template-scaffold writes.
+            cols = {r["name"] for r in cx.execute("PRAGMA table_info(pages)").fetchall()}
+            if "guidance" not in cols:
+                cx.execute("ALTER TABLE pages ADD COLUMN guidance TEXT")
             for k, v in DEFAULTS_KV.items():
                 cx.execute("INSERT OR IGNORE INTO kv(key, value) VALUES(?, ?)", (k, v))
             cx.commit()
@@ -200,37 +208,92 @@ class Store:
 
     # ---- Pages ----------------------------------------------------------
 
-    def upsert_page(self, page_id: str, title: str, content_md: str) -> Page:
+    def upsert_page(
+        self,
+        page_id: str,
+        title: str,
+        content_md: str,
+        guidance: str | None = None,
+    ) -> Page:
+        """Create or update a page.
+
+        guidance semantics: None means "leave the existing guidance note
+        untouched" (so Claude calling canvas_set_page on a scaffolded page
+        keeps the section note). Pass a string to set it, or "" to clear it.
+        """
         now = time.time()
         with self._connect() as cx:
-            existing = cx.execute("SELECT position FROM pages WHERE page_id=?", (page_id,)).fetchone()
+            existing = cx.execute(
+                "SELECT position, guidance FROM pages WHERE page_id=?", (page_id,)
+            ).fetchone()
             if existing:
+                new_guidance = existing["guidance"] if guidance is None else guidance
                 cx.execute(
-                    "UPDATE pages SET title=?, content_md=?, updated_at=? WHERE page_id=?",
-                    (title, content_md, now, page_id),
+                    "UPDATE pages SET title=?, content_md=?, guidance=?, updated_at=? WHERE page_id=?",
+                    (title, content_md, new_guidance, now, page_id),
                 )
                 pos = existing["position"]
             else:
                 next_pos = (cx.execute("SELECT COALESCE(MAX(position), -1) + 1 AS n FROM pages").fetchone())["n"]
+                new_guidance = guidance  # None on first insert is fine (no note)
                 cx.execute(
-                    "INSERT INTO pages(page_id, position, title, content_md, updated_at) VALUES(?, ?, ?, ?, ?)",
-                    (page_id, next_pos, title, content_md, now),
+                    "INSERT INTO pages(page_id, position, title, content_md, guidance, updated_at) VALUES(?, ?, ?, ?, ?, ?)",
+                    (page_id, next_pos, title, content_md, new_guidance, now),
                 )
                 pos = next_pos
         self._bump()
-        return Page(page_id, pos, title, content_md, now)
+        return Page(page_id, pos, title, content_md, now, new_guidance)
+
+    def scaffold_pages(self, specs: list[dict]) -> dict:
+        """Create section pages from a template's section list, in order.
+
+        Each spec: {page_id, title, guidance}. Pages that already exist are
+        left untouched (we never overwrite drafted content); only missing
+        page_ids are created (empty content_md + the section's guidance note).
+
+        Returns {created: [...], skipped: [...]}.
+        """
+        created: list[str] = []
+        skipped: list[str] = []
+        now = time.time()
+        with self._connect() as cx:
+            for spec in specs:
+                pid = spec.get("page_id")
+                if not pid:
+                    continue
+                exists = cx.execute("SELECT 1 FROM pages WHERE page_id=?", (pid,)).fetchone()
+                if exists:
+                    skipped.append(pid)
+                    continue
+                next_pos = (cx.execute("SELECT COALESCE(MAX(position), -1) + 1 AS n FROM pages").fetchone())["n"]
+                cx.execute(
+                    "INSERT INTO pages(page_id, position, title, content_md, guidance, updated_at) VALUES(?, ?, ?, ?, ?, ?)",
+                    (pid, next_pos, spec.get("title", pid), "", spec.get("guidance"), now),
+                )
+                created.append(pid)
+            # Default the current page to the first scaffolded section.
+            if created:
+                cur = cx.execute("SELECT value FROM kv WHERE key='current_page'").fetchone()
+                if not cur or not cur["value"]:
+                    cx.execute(
+                        "INSERT INTO kv(key, value) VALUES('current_page', ?) "
+                        "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                        (created[0],),
+                    )
+        self._bump()
+        return {"created": created, "skipped": skipped}
 
     def get_pages(self) -> list[Page]:
         with self._connect() as cx:
             rows = cx.execute("SELECT * FROM pages ORDER BY position ASC").fetchall()
-            return [Page(r["page_id"], r["position"], r["title"], r["content_md"], r["updated_at"]) for r in rows]
+            return [Page(r["page_id"], r["position"], r["title"], r["content_md"], r["updated_at"], r["guidance"]) for r in rows]
 
     def get_page(self, page_id: str) -> Page | None:
         with self._connect() as cx:
             r = cx.execute("SELECT * FROM pages WHERE page_id=?", (page_id,)).fetchone()
             if not r:
                 return None
-            return Page(r["page_id"], r["position"], r["title"], r["content_md"], r["updated_at"])
+            return Page(r["page_id"], r["position"], r["title"], r["content_md"], r["updated_at"], r["guidance"])
 
     def delete_page(self, page_id: str):
         with self._connect() as cx:

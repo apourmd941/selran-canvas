@@ -16,6 +16,7 @@ When Claude writes a manuscript, the chat sidebar fills up with paragraphs. You 
 - **Chat stays full-width** for the actual conversation.
 - **Inline MCQ widgets** let Claude propose options ("Should the introduction lead with mechanism or epidemiology? [A/B/C]") that you click to answer — Claude sees your answer on the next turn and rewrites accordingly.
 - **Select-to-comment** — highlight any sentence in a rendered page and attach a note ("tighten this", "add a limitation about residual confounding"). The comment is pinned to that exact text; Claude reads open comments on the next turn, revises, and marks them resolved (the pin turns green). It's the user → Claude mirror of the MCQ flow.
+- **Template dropdown** — pick a manuscript or grant template (RCT, systematic review, cohort, NIH R01/R21/K, …) and the canvas scaffolds the section pages, each topped with a collapsible *"what this section should contain"* note. Claude fills the prose below the note. Templates are authored in the `selran-medical-writer` skill and read at runtime — when that skill isn't installed, the dropdown is simply empty.
 - **Switch the journal dropdown** and every citation in the document re-formats instantly in that journal's house style — NEJM numeric, Lancet author-date, JBJS specific punctuation, etc.
 - **Three viewing modes**: section-at-a-time (working), full manuscript with page numbers (submission preview), or diff (recent changes highlighted).
 - **Companions**: when `selran-design`, `selran-data-analysis`, or `bio-research:pubmed` are installed, Claude uses them automatically — for journal-house templates, generated figures, or PMID-to-citation lookups. When they aren't, the canvas falls back gracefully and still works.
@@ -220,6 +221,30 @@ These conventions live in the writer skill's `SKILL.md` ("Chat-side signals (com
 
 ---
 
+## Templates (manuscript / grant scaffolding)
+
+The top-bar **Template** dropdown lists the writer skill's templates — 12 paper
+types (RCT, systematic review, cohort, case-control, diagnostic accuracy, case
+report, guidelines, biomechanical, economic, editorial, survey, narrative
+review) and 3 NIH grant mechanisms (R01, R21, K). Picking one **scaffolds** its
+section pages: each is created empty but with a collapsible *"what this section
+should contain"* note (e.g. the RCT Methods note lists the 10 expected
+subsections; the R01 Specific Aims note describes the 4-paragraph structure).
+Claude then fills the prose below each note via `canvas_set_page`, keeping the
+section's `page_id` so the note persists.
+
+- **Source of truth:** templates are authored in
+  `selran-medical-writer/templates-manifest.json`. Canvas locates that file via
+  the same sibling-scan used for companion detection (or the
+  `SELRAN_CANVAS_TEMPLATES_MANIFEST` env override) — there's no bundled copy to
+  drift. If the writer skill isn't a sibling on disk, the dropdown is empty and
+  the canvas works normally without it.
+- **Non-destructive:** re-scaffolding a template skips section pages that
+  already exist, so it never overwrites drafted content.
+- **Endpoints:** `GET /api/templates` (dropdown list), `POST /api/templates/{id}/scaffold` (create section pages).
+
+---
+
 ## Companion-skill detection
 
 On startup, the server probes for sibling skills via:
@@ -280,7 +305,7 @@ rm ~/.selran-canvas/canvas_state.db
 
 **v1.0.1** — Added `canvas_answer_mcq(mcq_id, answer)`, letting users answer MCQs by typing a single letter A–F in chat instead of (or in addition to) clicking in the browser. Both routes write to the same SQLite store, so the canvas card flips to "answered" live either way. Paired with three "chat-side signals" conventions in the writer skill — session-start status line, per-turn compact badge, and an MCQ chat-mirror.
 
-**v1.1 (current)** — Project hub UI (project picker + clickable companions + per-companion artifact view) and two new MCP tools: `canvas_add_evidence` (pulls highlighted passages + CSL-JSON from the Selran Librarian into the bibliography and page) and **`canvas_resolve_comment`** powering the **select-to-comment layer** — users highlight text in a rendered page and attach an instruction; the note is anchored to that text (text-quote anchoring), appears in `canvas_get_state().comments`, and Claude resolves it after editing (the browser pin turns green). 10 MCP tools total. 60 passing pytest tests. Still planned for the v1.1 line: print-to-PDF, "lock page", history/undo, keyboard shortcut to next pending MCQ, persistent style/theme/mode preferences.
+**v1.1 (current)** — Project hub UI (project picker + clickable companions + per-companion artifact view); two new MCP tools — `canvas_add_evidence` (pulls highlighted passages + CSL-JSON from the Selran Librarian into the bibliography and page) and **`canvas_resolve_comment`** powering the **select-to-comment layer** (users highlight text and attach an instruction; the note is anchored via text-quote anchoring, appears in `canvas_get_state().comments`, and Claude resolves it after editing); and the **template dropdown** that scaffolds manuscript/grant section pages from the writer skill's 15-template manifest, each with a collapsible per-section guidance note (pages gain a `guidance` column). 10 MCP tools total. 70 passing pytest tests. Still planned for the v1.1 line: print-to-PDF, "lock page", history/undo, keyboard shortcut to next pending MCQ, persistent style/theme/mode preferences.
 
 **v1.2 (later)** — free-form click-to-edit a sentence with conflict-resolved sync (operational transforms or CRDTs). This is the "Google Docs" upgrade — significant scope, deferred until needed. Select-to-comment (shipped in v1.1) covers most of the directing need without it.
 
