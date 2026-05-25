@@ -1,0 +1,26 @@
+{
+  "selran_app_version": 1,
+  "id": "canvas",
+  "name": "Selran Canvas",
+  "version": "0.1.0",
+  "summary": "Page-aware canvas for Claude — renders manuscript pages, inline MCQ + select-to-comment, and 100+ journal citation styles. The companion surface Writer, Datacore, and Design render into.",
+  "tags": ["canvas", "companion", "manuscripts", "citations"],
+  "category": "writing",
+  "icon": "▢",
+  "accent": "#F59E0B",
+  "launch": {
+    "kind": "spawn",
+    "binary": "selran-canvas",
+    "args": []
+  },
+  "then_open_url": "http://localhost:15000",
+  "repo_path": "~/NeutronDev/Selran canvas skill platform",
+  "mcp_skill_id": "canvas",
+  "required": true,
+  "install": {
+    "source": { "kind": "bundled" },
+    "python": { "package": ".", "editable": true },
+    "home": "~/.selran-canvas",
+    "ports": 2
+  }
+}
