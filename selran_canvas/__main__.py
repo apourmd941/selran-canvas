@@ -23,6 +23,22 @@ from .store import Store
 from .webapp import build_webapp
 
 
+def _open_store(cfg):
+    """Pick the state backend.
+
+    Selran Launchpad v3's orchestrator injects ``CANVAS_DATABASE_URL`` (the app's
+    managed-Postgres role URL) at launch; when it's present we use the Postgres
+    backend, otherwise the local SQLite file. SQLite stays the default and its code
+    path is unchanged, so this is a reversible cutover — unset the env var and
+    Canvas is exactly as it was.
+    """
+    url = os.environ.get("CANVAS_DATABASE_URL", "").strip()
+    if url:
+        from .pg_store import PgStore
+        return PgStore(url)
+    return Store(cfg.db_path)
+
+
 def _start_http_server(app, host: str, port: int) -> threading.Thread:
     """Run uvicorn in a background daemon thread."""
     config = uvicorn.Config(app, host=host, port=port, log_level="warning", access_log=False)
@@ -54,13 +70,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     cfg = get_config()
-    store = Store(cfg.db_path)
+    store = _open_store(cfg)
 
     if args.info:
+        pg_url = os.environ.get("CANVAS_DATABASE_URL", "").strip()
+        backend = "postgres (managed)" if pg_url else "sqlite"
         print("Selran Canvas")
         print(f"  URL          : {cfg.url}")
         print(f"  Port         : {cfg.port}  (env SELRAN_CANVAS_PORT={os.environ.get('SELRAN_CANVAS_PORT','')!r})")
-        print(f"  State DB     : {cfg.db_path}")
+        print(f"  Backend      : {backend}")
+        print(f"  State DB     : {pg_url or cfg.db_path}")
         print(f"  Auto-open    : {cfg.auto_open_browser and not args.no_browser}")
         return 0
 
