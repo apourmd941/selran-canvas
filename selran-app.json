@@ -23,7 +23,7 @@
     "python": { "package": ".", "editable": true },
     "home": "~/.selran-canvas",
     "ports": 2,
-    "db": { "kind": "postgres", "name": "canvas" },
+    "db": { "kind": "postgres", "database": "canvas" },
     "env": { "CANVAS_DATABASE_URL": "${managed_pg_url}" }
   }
 }
