@@ -257,12 +257,31 @@ def build_webapp(store: Store) -> FastAPI:
                 out.append({"direction": toks.get("direction") or f.stem, "tokens": toks})
         return JSONResponse({"ok": True, "starters": out})
 
+    def _validated_project_slug(slug):
+        """Reject path-traversal in a user-supplied project slug before it is
+        joined onto PROJECTS_ROOT and written to (R1-008). Must be an existing
+        project; no separators or dot-dot; the resolved dir must stay under
+        PROJECTS_ROOT. Mirrors the guard the artifact routes already use."""
+        if not slug or "/" in slug or "\\" in slug or ".." in slug:
+            raise HTTPException(400, "invalid project")
+        if projects.get(slug) is None:
+            raise HTTPException(404, f"unknown project {slug!r}")
+        root = projects.PROJECTS_ROOT.resolve()
+        dest = (projects.PROJECTS_ROOT / slug).resolve()
+        if not dest.is_relative_to(root):
+            raise HTTPException(400, "invalid project path")
+        return slug
+
     @app.post("/api/design/use-starter")
     async def api_design_use_starter(payload: dict):
         direction = (payload.get("direction") or "").strip()
         slug = payload.get("project") or projects.get_current_id()
         if not direction or not slug:
             raise HTTPException(400, "need direction + project")
+        # Both inputs flow into filesystem paths — sanitize before any join.
+        if "/" in direction or "\\" in direction or ".." in direction:
+            raise HTTPException(400, "invalid direction")
+        slug = _validated_project_slug(slug)
         d = _design_starters_dir()
         src = (d / f"{direction}.md") if d else None
         if not src or not src.is_file():
@@ -286,6 +305,7 @@ def build_webapp(store: Store) -> FastAPI:
         tokens = payload.get("tokens")
         if not slug or not isinstance(tokens, dict):
             raise HTTPException(400, "need project + tokens")
+        slug = _validated_project_slug(slug)
         subdir = projects.COMPANION_TO_SUBDIR.get("selran-design", "figures")
         path = projects.PROJECTS_ROOT / slug / subdir / "design-system.md"
         body = ""
@@ -296,6 +316,15 @@ def build_webapp(store: Store) -> FastAPI:
                 body = m.group(1)
             elif not old.startswith("---"):
                 body = old
+            else:
+                # Starts with '---' but the closing fence is missing/malformed:
+                # the regex can't locate the body. Don't silently drop the prose
+                # on rewrite (R1-012) — refuse and let the user fix the file.
+                raise HTTPException(
+                    409,
+                    "design-system.md has malformed YAML frontmatter (no closing "
+                    "'---'); fix or remove it before saving tokens",
+                )
         front = yaml.safe_dump(tokens, sort_keys=False, allow_unicode=True).rstrip()
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("---\n" + front + "\n---\n" + body, encoding="utf-8")

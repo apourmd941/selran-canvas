@@ -159,9 +159,15 @@
       const idx = cites.length - 1;
       return `CITE${idx}`;
     });
-    let html = window.marked ? marked.parse(processed) : `<pre>${escapeHtml(processed)}</pre>`;
-    // Sanitize first
-    html = window.DOMPurify ? DOMPurify.sanitize(html, { ADD_ATTR: ["data-page-num"] }) : html;
+    // Render markdown ONLY when we can also sanitize it. If DOMPurify is missing
+    // (vendored lib deleted/failed to load), never inject marked's raw HTML —
+    // degrade *safely* to escaped plain text (R1-013).
+    let html;
+    if (window.marked && window.DOMPurify) {
+      html = DOMPurify.sanitize(marked.parse(processed), { ADD_ATTR: ["data-page-num"] });
+    } else {
+      html = `<pre>${escapeHtml(processed)}</pre>`;
+    }
 
     // Render citations via citeproc (numeric or author-date depending on style)
     html = html.replace(/CITE(\d+)/g, (m, i) => {
