@@ -507,6 +507,12 @@
       await scaffoldTemplate(id);
     });
 
+    // Front door ("What are you writing?"): filter the Template dropdown to
+    // the chosen category and, for a journal paper, surface the Journal picker.
+    document.querySelectorAll(".frontdoor-card").forEach((card) => {
+      card.addEventListener("click", () => selectDocKind(card.dataset.kind));
+    });
+
     // Project picker: switching the dropdown sets the new current
     // project on the server, then re-fetches so the sidebar +
     // companion view reflect the new context. The empty-string
@@ -886,6 +892,12 @@
 
   function renderCompanionView() {
     const companionId = PROJECT_VIEW.companion;
+    // The Design companion gets a rich design-system view (tokens + live
+    // component preview) instead of a raw artifact list.
+    if (companionId === "selran-design") {
+      void renderDesignView();
+      return;
+    }
     const subdir = COMPANION_TO_SUBDIR[companionId] || "?";
     $("#companion-view-title").textContent = companionId;
     const projectLabel = PROJECTS_STATE.project
@@ -947,6 +959,103 @@
     catch { return iso; }
   }
 
+  // ---- Design system view (the Design companion) ----------------------
+
+  // Only allow hex or bare color keywords into inline style (the tokens come
+  // from a local file, but we never interpolate arbitrary strings into CSS).
+  function safeColor(v) {
+    const s = String(v == null ? "" : v).trim();
+    return /^#[0-9a-fA-F]{3,8}$/.test(s) || /^[a-zA-Z]+$/.test(s) ? s : "transparent";
+  }
+
+  async function renderDesignView() {
+    $("#companion-view-title").textContent = "Design system";
+    const sub = $("#companion-view-subtitle");
+    const host = $("#companion-artifact-list");
+    $("#companion-artifact-reader").hidden = true;
+    host.innerHTML = '<li class="artifact-list-empty">Loading design system…</li>';
+    let data;
+    try {
+      const pid = PROJECTS_STATE.current_id || "";
+      const r = await fetch(`/api/design/system?project=${encodeURIComponent(pid)}`);
+      data = await r.json();
+    } catch { data = { ok: false, error: "network" }; }
+
+    if (!data.ok || !data.tokens) {
+      sub.textContent = "";
+      host.innerHTML =
+        '<li class="artifact-list-empty">No design system yet. When the Design skill writes ' +
+        "<code>design-system.md</code> into this project's <code>figures/</code>, its tokens " +
+        "and a live component preview render here." +
+        (data.error ? ' <span class="muted">(' + escapeHtml(data.error) + ")</span>" : "") +
+        "</li>";
+      return;
+    }
+    const t = data.tokens;
+    sub.textContent =
+      data.file +
+      (t.direction ? " · direction: " + t.direction : "") +
+      (data.variants && data.variants.length > 1 ? " · " + data.variants.length + " variants" : "");
+    host.innerHTML = '<li class="design-host">' + renderDesignPanelHtml(t) + "</li>";
+  }
+
+  function swatchRow(label, value) {
+    return (
+      '<div class="ds-swatch"><span class="ds-chip" style="background:' + safeColor(value) + '"></span>' +
+      '<span class="ds-key">' + escapeHtml(label) + "</span>" +
+      '<span class="ds-val">' + escapeHtml(String(value)) + "</span></div>"
+    );
+  }
+
+  function renderDesignPanelHtml(t) {
+    const color = t.color || {};
+    const type = t.type || {};
+    const spacing = t.spacing || {};
+    const bodyFont = escapeAttr(String(type.body || "system-ui"));
+
+    const colorRows = Object.entries(color)
+      .filter(([, v]) => typeof v === "string")
+      .map(([k, v]) => swatchRow(k, v))
+      .join("");
+
+    const scale = type.scale || {};
+    const scaleRows = Object.entries(scale)
+      .map(([k, px]) =>
+        '<div class="ds-type-row" style="font-size:' + (Number(px) || 16) + "px;font-family:" + bodyFont + '">' +
+        escapeHtml(k) + " · " + escapeHtml(String(px)) + "px — The quick brown fox</div>")
+      .join("");
+
+    const accent = safeColor(color.accent || "#2563eb");
+    const fg = safeColor(color.fg_primary || "#111111");
+    const bgSec = safeColor(color.bg_secondary || "#f4f4f5");
+    const border = safeColor(color.border || "#e4e4e7");
+    const radius = Number((spacing.radius && (spacing.radius.md || spacing.radius.sm)) || 8) || 8;
+
+    const preview =
+      '<div class="ds-preview" style="font-family:' + bodyFont + '">' +
+        '<button class="ds-btn" style="background:' + accent + ";border-radius:" + radius + 'px">Primary action</button>' +
+        '<div class="ds-card" style="background:' + bgSec + ";border:1px solid " + border + ";border-radius:" + radius + "px;color:" + fg + '">' +
+          '<div class="ds-card-title">Card title</div>' +
+          '<div class="ds-card-body">A sample card rendered with this system’s tokens — surface, border, radius, body type.</div>' +
+        "</div>" +
+      "</div>";
+
+    const fonts =
+      '<div class="ds-fonts">Display: <b>' + escapeHtml(String(type.display || "—")) + "</b> · " +
+      "Body: <b>" + escapeHtml(String(type.body || "—")) + "</b> · Mono: <b>" +
+      escapeHtml(String(type.mono || "—")) + "</b></div>";
+    const darkNote = color.dark ? '<div class="muted small">+ dark-mode variant defined</div>' : "";
+
+    return (
+      '<section class="ds-section"><h3>Preview</h3>' + preview + "</section>" +
+      '<section class="ds-section"><h3>Color</h3><div class="ds-swatches">' + colorRows + "</div>" + darkNote + "</section>" +
+      '<section class="ds-section"><h3>Type</h3>' + fonts + '<div class="ds-type">' + scaleRows + "</div></section>" +
+      '<section class="ds-section"><h3>Spacing</h3><div class="muted small">base unit ' +
+        escapeHtml(String(spacing.base_unit || "—")) + "px · radius " +
+        escapeHtml(JSON.stringify(spacing.radius || {})) + "</div></section>"
+    );
+  }
+
   // ---- Templates ------------------------------------------------------
 
   async function loadTemplates() {
@@ -982,6 +1091,40 @@
       }
       sel.appendChild(og);
     }
+  }
+
+  // Front door: filter the Template dropdown to the chosen kind and, for a
+  // journal paper, flag the Journal control. Reuses the existing template +
+  // journal plumbing — picking a template still scaffolds via scaffoldTemplate.
+  function selectDocKind(kind) {
+    const sel = $("#template-select");
+    if (sel) {
+      sel.querySelectorAll("optgroup").forEach((og) => {
+        const show =
+          kind === "report" ||
+          (kind === "paper" && /paper/i.test(og.label)) ||
+          (kind === "grant" && /grant/i.test(og.label));
+        og.hidden = !show;
+        og.disabled = !show;
+      });
+      sel.value = "";
+      try { sel.focus(); } catch (e) { /* focus is best-effort */ }
+    }
+    const journal = document.querySelector(".control-wide");
+    if (journal) journal.classList.toggle("fd-emphasize", kind === "paper");
+
+    const hint = $("#frontdoor-hint");
+    if (hint) {
+      hint.textContent =
+        kind === "paper"
+          ? "Pick a paper type in the Template dropdown above, then choose the target journal."
+          : kind === "grant"
+            ? "Pick a grant mechanism in the Template dropdown above."
+            : "Pick a template above to scaffold your report.";
+    }
+    document.querySelectorAll(".frontdoor-card").forEach((c) =>
+      c.classList.toggle("active", c.dataset.kind === kind),
+    );
   }
 
   async function scaffoldTemplate(templateId) {

@@ -74,10 +74,30 @@
 
 <main id="viewer">
   <div id="viewer-empty" class="empty-state">
-    <h1>Selran Canvas</h1>
-    <p>Connected to MCP. Waiting for Claude to render a page&hellip;</p>
-    <p class="muted">Tip: in your chat, ask Claude to render a manuscript section. Pages will appear here. Click MCQ options to answer them inline. Switch the Journal dropdown to instantly reformat citations in any of 100 medical journal styles.</p>
-    <p class="muted small">Run <code>python -m selran_canvas --demo</code> to seed example content.</p>
+    <h1>What are you writing?</h1>
+    <!-- Front door (the guided start). Picking one filters the Template
+         dropdown to the matching category and, for a journal paper, surfaces
+         the Journal picker. It drives the existing template-scaffold +
+         journal-style plumbing — no new state. -->
+    <div id="frontdoor" class="frontdoor">
+      <button type="button" class="frontdoor-card" data-kind="paper">
+        <span class="fd-icon">📄</span>
+        <span class="fd-title">Journal paper</span>
+        <span class="fd-sub">Pick a paper type + the target journal</span>
+      </button>
+      <button type="button" class="frontdoor-card" data-kind="grant">
+        <span class="fd-icon">🏛️</span>
+        <span class="fd-title">Grant</span>
+        <span class="fd-sub">NIH R01 / R21 and other mechanisms</span>
+      </button>
+      <button type="button" class="frontdoor-card" data-kind="report">
+        <span class="fd-icon">📝</span>
+        <span class="fd-title">Report</span>
+        <span class="fd-sub">A plain structured document</span>
+      </button>
+    </div>
+    <p id="frontdoor-hint" class="muted">Or ask Claude in chat to render a section — pages appear here as it writes.</p>
+    <p class="muted small">Switch the Journal dropdown anytime to reformat citations in any of 100 styles. Run <code>python -m selran_canvas --demo</code> to seed example content.</p>
   </div>
   <article id="page-view" hidden></article>
   <article id="manuscript-view" hidden></article>

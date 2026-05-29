@@ -178,6 +178,40 @@ def build_webapp(store: Store) -> FastAPI:
     async def api_templates():
         return JSONResponse({"templates": templates.list_templates()})
 
+    # Design-system view (the Design companion). Reads the active project's
+    # design-system.md (the design skill's output — YAML frontmatter of color/
+    # type/spacing tokens) from the design subdir and returns parsed tokens for
+    # Canvas to render swatches + a live component preview. ok:False (200) when
+    # there's no project or no design-system yet, so the UI degrades cleanly.
+    @app.get("/api/design/system")
+    async def api_design_system(project: str | None = None):
+        import yaml
+
+        slug = project or projects.get_current_id()
+        if not slug:
+            return JSONResponse({"ok": False, "error": "no current project"})
+        subdir = projects.COMPANION_TO_SUBDIR.get("selran-design", "figures")
+        names = [
+            a["name"]
+            for a in projects.list_artifacts(slug, subdir)
+            if a["name"].startswith("design-system") and a["name"].endswith(".md")
+        ]
+        if not names:
+            return JSONResponse({"ok": False, "error": "no design-system.md", "subdir": subdir})
+        name = "design-system.md" if "design-system.md" in names else sorted(names)[0]
+        text = projects.read_artifact(slug, subdir, name) or ""
+        tokens = None
+        if text.startswith("---"):
+            end = text.find("\n---", 3)
+            if end != -1:
+                try:
+                    tokens = yaml.safe_load(text[3:end])
+                except yaml.YAMLError:
+                    tokens = None
+        return JSONResponse(
+            {"ok": True, "file": name, "tokens": tokens, "variants": sorted(names)}
+        )
+
     @app.post("/api/templates/{template_id}/scaffold")
     async def api_template_scaffold(template_id: str, payload: dict | None = None):
         tmpl = templates.get_template(template_id)

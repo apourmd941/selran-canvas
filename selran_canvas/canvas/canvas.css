@@ -1,6 +1,9 @@
 /* Selran Canvas — base styles
  * Themes via [data-theme="draft|print|reviewer|compact"] on <body>.
  * Modes via [data-mode="section|manuscript|diff"] on <body>.
+ *
+ * Front-door chooser (empty state) + Design-system companion view styles are
+ * at the END of this file.
  */
 
 :root {
@@ -699,3 +702,56 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+/* ── Front door: "What are you writing?" chooser (empty state) ──────── */
+.frontdoor {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 18px 0 14px;
+}
+.frontdoor-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 200px;
+  padding: 14px 16px;
+  text-align: left;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius, 8px);
+  background: var(--c-surface);
+  color: var(--c-text);
+  cursor: pointer;
+  transition: border-color .15s, transform .1s;
+}
+.frontdoor-card:hover { border-color: var(--c-accent); transform: translateY(-1px); }
+.frontdoor-card.active { border-color: var(--c-accent); box-shadow: 0 0 0 2px var(--c-accent-soft); }
+.frontdoor-card .fd-icon { font-size: 22px; }
+.frontdoor-card .fd-title { font-weight: 600; }
+.frontdoor-card .fd-sub { font-size: 12px; color: var(--c-muted); }
+.control-wide.fd-emphasize { outline: 2px solid var(--c-accent); border-radius: var(--radius, 8px); }
+
+/* ── Design-system companion view ──────────────────────────────────── */
+.design-host { display: block; padding: 4px 2px; }
+.ds-section { margin: 0 0 18px; }
+.ds-section > h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--c-muted);
+}
+.ds-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.ds-swatch { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.ds-chip { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--c-border); flex: none; }
+.ds-key { color: var(--c-text); }
+.ds-val { color: var(--c-muted); font-family: var(--font-mono); margin-left: auto; }
+.ds-fonts { font-size: 13px; color: var(--c-text); margin-bottom: 10px; }
+.ds-type-row { padding: 2px 0; color: var(--c-text); line-height: 1.2; }
+.ds-preview { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 8px 0; }
+.ds-btn { color: #fff; border: 0; padding: 9px 16px; font-weight: 600; cursor: default; }
+.ds-card { padding: 14px 16px; max-width: 320px; }
+.ds-card-title { font-weight: 600; margin-bottom: 4px; }
+.ds-card-body { font-size: 13px; opacity: .85; }
