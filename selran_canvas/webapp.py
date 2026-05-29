@@ -275,6 +275,32 @@ def build_webapp(store: Store) -> FastAPI:
         )
         return JSONResponse({"ok": True, "direction": direction, "wrote": "design-system.md"})
 
+    # Save edited tokens back to the project's design-system.md — rewrites the
+    # YAML frontmatter, preserves the markdown body (the skill's prose intent).
+    @app.post("/api/design/system")
+    async def api_design_system_save(payload: dict):
+        import re
+        import yaml
+
+        slug = payload.get("project") or projects.get_current_id()
+        tokens = payload.get("tokens")
+        if not slug or not isinstance(tokens, dict):
+            raise HTTPException(400, "need project + tokens")
+        subdir = projects.COMPANION_TO_SUBDIR.get("selran-design", "figures")
+        path = projects.PROJECTS_ROOT / slug / subdir / "design-system.md"
+        body = ""
+        if path.is_file():
+            old = path.read_text(encoding="utf-8", errors="replace")
+            m = re.match(r"^---\n.*?\n---\n?(.*)$", old, re.S)
+            if m:
+                body = m.group(1)
+            elif not old.startswith("---"):
+                body = old
+        front = yaml.safe_dump(tokens, sort_keys=False, allow_unicode=True).rstrip()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("---\n" + front + "\n---\n" + body, encoding="utf-8")
+        return JSONResponse({"ok": True, "wrote": "design-system.md"})
+
     @app.post("/api/templates/{template_id}/scaffold")
     async def api_template_scaffold(template_id: str, payload: dict | None = None):
         tmpl = templates.get_template(template_id)

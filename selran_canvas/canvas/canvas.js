@@ -961,6 +961,10 @@
 
   // ---- Design system view (the Design companion) ----------------------
 
+  // The active project's editable tokens (mutated in place by the editor,
+  // POSTed back on Save). Null until a design-system is loaded.
+  let DESIGN_TOKENS = null;
+
   // Only allow hex or bare color keywords into inline style (the tokens come
   // from a local file, but we never interpolate arbitrary strings into CSS).
   function safeColor(v) {
@@ -1003,12 +1007,14 @@
       return;
     }
     const t = sys.tokens;
+    DESIGN_TOKENS = t; // editable in place; POSTed back on Save
     sub.textContent =
       sys.file +
       (t.direction ? " · direction: " + t.direction : "") +
       (sys.variants && sys.variants.length > 1 ? " · " + sys.variants.length + " variants" : "");
     host.innerHTML = '<li class="design-host">' + strip + renderDesignPanelHtml(t) + "</li>";
     bindStarterButtons();
+    bindDesignEditing();
   }
 
   // The 7 pre-baked direction starters as a pick strip (each a mini swatch +
@@ -1053,18 +1059,50 @@
     }
   }
 
-  function swatchRow(label, value) {
+  // A bound input for one token path: a color picker (+ hex field) for hex
+  // values, else a text field. data-token carries the dotted path; edits flow
+  // into DESIGN_TOKENS via the delegated handler in bindDesignEditing.
+  function tokenInput(path, value) {
+    const v = String(value);
+    const p = escapeAttr(path);
+    if (/^#[0-9a-fA-F]{3,8}$/.test(v)) {
+      return (
+        '<input type="color" class="ds-color" data-token="' + p + '" value="' + escapeAttr(v) + '">' +
+        '<input type="text" class="ds-hex" data-token="' + p + '" value="' + escapeAttr(v) + '">'
+      );
+    }
+    return '<input type="text" class="ds-hex" data-token="' + p + '" value="' + escapeAttr(v) + '">';
+  }
+
+  function swatchRow(key, value) {
     return (
-      '<div class="ds-swatch"><span class="ds-chip" style="background:' + safeColor(value) + '"></span>' +
-      '<span class="ds-key">' + escapeHtml(label) + "</span>" +
-      '<span class="ds-val">' + escapeHtml(String(value)) + "</span></div>"
+      '<div class="ds-swatch"><span class="ds-key">' + escapeHtml(key) + "</span>" +
+      tokenInput("color." + key, value) + "</div>"
+    );
+  }
+
+  // Live component preview from the (possibly just-edited) tokens.
+  function previewHtml(t) {
+    const color = t.color || {}, type = t.type || {}, spacing = t.spacing || {};
+    const bodyFont = escapeAttr(String(type.body || "system-ui"));
+    const accent = safeColor(color.accent || "#2563eb");
+    const fg = safeColor(color.fg_primary || "#111111");
+    const bgSec = safeColor(color.bg_secondary || "#f4f4f5");
+    const border = safeColor(color.border || "#e4e4e7");
+    const radius = Number((spacing.radius && (spacing.radius.md || spacing.radius.sm)) || 8) || 8;
+    return (
+      '<div class="ds-preview" style="font-family:' + bodyFont + '">' +
+        '<button class="ds-btn" style="background:' + accent + ";border-radius:" + radius + 'px">Primary action</button>' +
+        '<div class="ds-card" style="background:' + bgSec + ";border:1px solid " + border + ";border-radius:" + radius + "px;color:" + fg + '">' +
+          '<div class="ds-card-title">Card title</div>' +
+          '<div class="ds-card-body">A sample card rendered with this system’s tokens — surface, border, radius, body type.</div>' +
+        "</div>" +
+      "</div>"
     );
   }
 
   function renderDesignPanelHtml(t) {
-    const color = t.color || {};
-    const type = t.type || {};
-    const spacing = t.spacing || {};
+    const color = t.color || {}, type = t.type || {}, spacing = t.spacing || {};
     const bodyFont = escapeAttr(String(type.body || "system-ui"));
 
     const colorRows = Object.entries(color)
@@ -1072,42 +1110,163 @@
       .map(([k, v]) => swatchRow(k, v))
       .join("");
 
-    const scale = type.scale || {};
-    const scaleRows = Object.entries(scale)
+    const scaleRows = Object.entries(type.scale || {})
       .map(([k, px]) =>
-        '<div class="ds-type-row" style="font-size:' + (Number(px) || 16) + "px;font-family:" + bodyFont + '">' +
-        escapeHtml(k) + " · " + escapeHtml(String(px)) + "px — The quick brown fox</div>")
+        '<div class="ds-type-row-edit"><input type="number" class="ds-num" data-token="type.scale.' +
+        escapeAttr(k) + '" value="' + (Number(px) || 16) + '">' +
+        '<span style="font-size:' + (Number(px) || 16) + "px;font-family:" + bodyFont + '">' +
+        escapeHtml(k) + " — The quick brown fox</span></div>")
       .join("");
 
-    const accent = safeColor(color.accent || "#2563eb");
-    const fg = safeColor(color.fg_primary || "#111111");
-    const bgSec = safeColor(color.bg_secondary || "#f4f4f5");
-    const border = safeColor(color.border || "#e4e4e7");
-    const radius = Number((spacing.radius && (spacing.radius.md || spacing.radius.sm)) || 8) || 8;
+    const fontInput = (label, key) =>
+      label + ' <input type="text" class="ds-font" data-token="type.' + key +
+      '" value="' + escapeAttr(String(type[key] || "")) + '">';
+    const fonts =
+      '<div class="ds-fonts">' + fontInput("Display", "display") + " · " +
+      fontInput("Body", "body") + " · " + fontInput("Mono", "mono") + "</div>";
 
-    const preview =
-      '<div class="ds-preview" style="font-family:' + bodyFont + '">' +
-        '<button class="ds-btn" style="background:' + accent + ";border-radius:" + radius + 'px">Primary action</button>' +
-        '<div class="ds-card" style="background:' + bgSec + ";border:1px solid " + border + ";border-radius:" + radius + "px;color:" + fg + '">' +
-          '<div class="ds-card-title">Card title</div>' +
-          '<div class="ds-card-body">A sample card rendered with this system’s tokens — surface, border, radius, body type.</div>' +
-        "</div>" +
+    const darkNote = color.dark ? '<div class="muted small">+ dark-mode variant defined (preserved on save)</div>' : "";
+
+    const toolbar =
+      '<div class="ds-toolbar">' +
+        '<button type="button" class="ds-save">Save to design-system.md</button>' +
+        '<span class="ds-export-label">Export</span>' +
+        '<button type="button" class="ds-export" data-fmt="css">CSS</button>' +
+        '<button type="button" class="ds-export" data-fmt="tailwind">Tailwind</button>' +
+        '<button type="button" class="ds-export" data-fmt="figma">Figma</button>' +
       "</div>";
 
-    const fonts =
-      '<div class="ds-fonts">Display: <b>' + escapeHtml(String(type.display || "—")) + "</b> · " +
-      "Body: <b>" + escapeHtml(String(type.body || "—")) + "</b> · Mono: <b>" +
-      escapeHtml(String(type.mono || "—")) + "</b></div>";
-    const darkNote = color.dark ? '<div class="muted small">+ dark-mode variant defined</div>' : "";
-
     return (
-      '<section class="ds-section"><h3>Preview</h3>' + preview + "</section>" +
+      toolbar +
+      '<section class="ds-section"><h3>Preview</h3><div id="ds-live-preview">' + previewHtml(t) + "</div></section>" +
       '<section class="ds-section"><h3>Color</h3><div class="ds-swatches">' + colorRows + "</div>" + darkNote + "</section>" +
       '<section class="ds-section"><h3>Type</h3>' + fonts + '<div class="ds-type">' + scaleRows + "</div></section>" +
-      '<section class="ds-section"><h3>Spacing</h3><div class="muted small">base unit ' +
-        escapeHtml(String(spacing.base_unit || "—")) + "px · radius " +
-        escapeHtml(JSON.stringify(spacing.radius || {})) + "</div></section>"
+      '<section class="ds-section"><h3>Spacing</h3><div class="ds-fonts">base unit ' +
+        '<input type="number" class="ds-num" data-token="spacing.base_unit" value="' + (Number(spacing.base_unit) || 4) + '">px · radius ' +
+        escapeHtml(JSON.stringify(spacing.radius || {})) + "</div></section>" +
+      '<pre id="ds-export-out" hidden></pre>'
     );
+  }
+
+  // Set obj[a][b][c] = value for path "a.b.c", creating maps as needed.
+  function setTokenPath(obj, path, value) {
+    const parts = path.split(".");
+    let o = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (o[parts[i]] == null || typeof o[parts[i]] !== "object") o[parts[i]] = {};
+      o = o[parts[i]];
+    }
+    o[parts[parts.length - 1]] = value;
+  }
+
+  function refreshLivePreview() {
+    const box = document.getElementById("ds-live-preview");
+    if (box && DESIGN_TOKENS) box.innerHTML = previewHtml(DESIGN_TOKENS);
+  }
+
+  function bindDesignEditing() {
+    const host = document.querySelector(".design-host");
+    if (!host || !DESIGN_TOKENS) return;
+    host.addEventListener("input", (e) => {
+      const el = e.target;
+      const path = el && el.dataset && el.dataset.token;
+      if (!path) return;
+      setTokenPath(DESIGN_TOKENS, path, el.type === "number" ? Number(el.value) : el.value);
+      // Keep paired inputs (color picker ↔ hex field) in sync.
+      host.querySelectorAll('[data-token="' + path + '"]').forEach((sib) => {
+        if (sib !== el) sib.value = el.value;
+      });
+      refreshLivePreview();
+    });
+    const save = host.querySelector(".ds-save");
+    if (save) save.addEventListener("click", saveDesignTokens);
+    host.querySelectorAll(".ds-export").forEach((b) =>
+      b.addEventListener("click", () => exportTokens(b.dataset.fmt)),
+    );
+  }
+
+  async function saveDesignTokens() {
+    const pid = PROJECTS_STATE.current_id;
+    if (!pid || !DESIGN_TOKENS) { toast("No project / no tokens to save."); return; }
+    try {
+      const r = await fetch("/api/design/system", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project: pid, tokens: DESIGN_TOKENS }),
+      });
+      if (!r.ok) { toast("Save failed: " + (await r.text())); return; }
+      toast("Saved to design-system.md");
+    } catch {
+      toast("Network error saving.");
+    }
+  }
+
+  // ---- Token export (CSS / Tailwind / Figma) --------------------------
+
+  function flatColors(t) {
+    const out = {};
+    Object.entries((t && t.color) || {}).forEach(([k, v]) => {
+      if (typeof v === "string") out[k] = v;
+    });
+    return out;
+  }
+
+  function exportTokens(fmt) {
+    const t = DESIGN_TOKENS || {};
+    const text = fmt === "tailwind" ? toTailwind(t) : fmt === "figma" ? toFigma(t) : toCss(t);
+    const out = document.getElementById("ds-export-out");
+    if (out) { out.textContent = text; out.hidden = false; }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(
+        () => toast(fmt.toUpperCase() + " copied to clipboard"),
+        () => {},
+      );
+    }
+  }
+
+  function toCss(t) {
+    const c = flatColors(t), ty = t.type || {}, sp = t.spacing || {};
+    const L = [":root {"];
+    Object.entries(c).forEach(([k, v]) => L.push("  --color-" + k.replace(/_/g, "-") + ": " + v + ";"));
+    if (ty.display) L.push("  --font-display: " + ty.display + ";");
+    if (ty.body) L.push("  --font-body: " + ty.body + ";");
+    if (ty.mono) L.push("  --font-mono: " + ty.mono + ";");
+    Object.entries(ty.scale || {}).forEach(([k, v]) => L.push("  --text-" + k + ": " + v + "px;"));
+    if (sp.base_unit) L.push("  --space-unit: " + sp.base_unit + "px;");
+    Object.entries(sp.radius || {}).forEach(([k, v]) => L.push("  --radius-" + k + ": " + v + "px;"));
+    L.push("}");
+    return L.join("\n");
+  }
+
+  function toTailwind(t) {
+    const c = flatColors(t), ty = t.type || {}, sp = t.spacing || {};
+    const colors = {};
+    Object.entries(c).forEach(([k, v]) => { colors[k.replace(/_/g, "-")] = v; });
+    const px = (m) => Object.fromEntries(Object.entries(m || {}).map(([k, v]) => [k, v + "px"]));
+    const cfg = {
+      theme: {
+        extend: {
+          colors,
+          fontFamily: { display: [ty.display], body: [ty.body], mono: [ty.mono] },
+          fontSize: px(ty.scale),
+          borderRadius: px(sp.radius),
+        },
+      },
+    };
+    return "module.exports = " + JSON.stringify(cfg, null, 2) + ";";
+  }
+
+  function toFigma(t) {
+    // W3C design-tokens JSON (Tokens Studio / Figma variable importers consume this).
+    const c = flatColors(t), ty = t.type || {}, sp = t.spacing || {};
+    const out = { color: {}, fontFamily: {}, fontSize: {}, radius: {} };
+    Object.entries(c).forEach(([k, v]) => { out.color[k] = { $value: v, $type: "color" }; });
+    ["display", "body", "mono"].forEach((k) => {
+      if (ty[k]) out.fontFamily[k] = { $value: ty[k], $type: "fontFamily" };
+    });
+    Object.entries(ty.scale || {}).forEach(([k, v]) => { out.fontSize[k] = { $value: v + "px", $type: "dimension" }; });
+    Object.entries(sp.radius || {}).forEach(([k, v]) => { out.radius[k] = { $value: v + "px", $type: "dimension" }; });
+    return JSON.stringify(out, null, 2);
   }
 
   // ---- Templates ------------------------------------------------------

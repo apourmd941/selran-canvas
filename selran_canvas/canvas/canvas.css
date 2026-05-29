@@ -781,3 +781,31 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   cursor: pointer;
 }
 .ds-dir-use:hover { border-color: var(--c-accent); color: var(--c-accent); }
+
+/* Token editor toolbar + inputs + export */
+.ds-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.ds-save {
+  font-size: 12px; font-weight: 600; padding: 6px 12px;
+  border: 1px solid var(--c-accent); border-radius: 6px;
+  background: var(--c-accent); color: #fff; cursor: pointer;
+}
+.ds-save:hover { opacity: .9; }
+.ds-export-label { margin-left: auto; font-size: 11px; color: var(--c-muted); }
+.ds-export {
+  font-size: 11px; padding: 5px 10px;
+  border: 1px solid var(--c-border); border-radius: 6px;
+  background: var(--c-bg); color: var(--c-text); cursor: pointer;
+}
+.ds-export:hover { border-color: var(--c-accent); color: var(--c-accent); }
+.ds-swatch .ds-key { min-width: 110px; }
+.ds-color { width: 26px; height: 22px; padding: 0; border: 1px solid var(--c-border); border-radius: 5px; background: none; cursor: pointer; }
+.ds-hex { width: 88px; font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; border: 1px solid var(--c-border); border-radius: 5px; background: var(--c-bg); color: var(--c-text); margin-left: auto; }
+.ds-num { width: 60px; font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; border: 1px solid var(--c-border); border-radius: 5px; background: var(--c-bg); color: var(--c-text); margin-right: 8px; }
+.ds-font { width: 130px; font-size: 12px; padding: 2px 6px; border: 1px solid var(--c-border); border-radius: 5px; background: var(--c-bg); color: var(--c-text); }
+.ds-type-row-edit { display: flex; align-items: center; padding: 3px 0; }
+#ds-export-out {
+  margin-top: 12px; max-height: 240px; overflow: auto;
+  background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 6px;
+  padding: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--c-text);
+  white-space: pre; word-break: normal;
+}
