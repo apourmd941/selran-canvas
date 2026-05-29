@@ -38,6 +38,7 @@ filesystem.
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 from datetime import datetime, timezone
@@ -45,7 +46,11 @@ from pathlib import Path
 from typing import Optional
 
 
-PROJECTS_ROOT = Path.home() / "Documents" / "Selran Projects"
+# Honor the user-chosen projects folder (Launchpad Q3): $SELRAN_PROJECTS_ROOT
+# (exported by the Launchpad when it spawns this app), else the default
+# ~/Documents/Selran Projects (unchanged — non-destructive).
+_PR_ENV = os.environ.get("SELRAN_PROJECTS_ROOT")
+PROJECTS_ROOT = Path(_PR_ENV).expanduser() if _PR_ENV else Path.home() / "Documents" / "Selran Projects"
 CURRENT_PROJECT_FILE = Path.home() / ".selran" / "current_project"
 SCHEMA_VERSION = 1
 
