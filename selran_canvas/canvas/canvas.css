@@ -755,3 +755,29 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
 .ds-card { padding: 14px 16px; max-width: 320px; }
 .ds-card-title { font-weight: 600; margin-bottom: 4px; }
 .ds-card-body { font-size: 13px; opacity: .85; }
+
+/* Direction picker strip */
+.ds-dirs { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.ds-dir {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius, 8px);
+  background: var(--c-surface);
+}
+.ds-dir-sw { display: flex; gap: 0; height: 28px; border-radius: 5px; overflow: hidden; border: 1px solid var(--c-border); }
+.ds-mini { flex: 1; }
+.ds-dir-name { font-size: 12px; font-weight: 600; color: var(--c-text); }
+.ds-dir-use {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 5px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  cursor: pointer;
+}
+.ds-dir-use:hover { border-color: var(--c-accent); color: var(--c-accent); }

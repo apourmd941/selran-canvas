@@ -974,29 +974,83 @@
     const host = $("#companion-artifact-list");
     $("#companion-artifact-reader").hidden = true;
     host.innerHTML = '<li class="artifact-list-empty">Loading design system…</li>';
-    let data;
+    const pid = PROJECTS_STATE.current_id || "";
+    let sys, starters;
     try {
-      const pid = PROJECTS_STATE.current_id || "";
-      const r = await fetch(`/api/design/system?project=${encodeURIComponent(pid)}`);
-      data = await r.json();
-    } catch { data = { ok: false, error: "network" }; }
+      [sys, starters] = await Promise.all([
+        fetch(`/api/design/system?project=${encodeURIComponent(pid)}`).then((r) => r.json()),
+        fetch("/api/design/starters").then((r) => r.json()),
+      ]);
+    } catch {
+      sys = { ok: false, error: "network" };
+      starters = { ok: false, starters: [] };
+    }
 
-    if (!data.ok || !data.tokens) {
+    const strip =
+      starters && starters.ok && starters.starters.length
+        ? renderStarterStripHtml(starters.starters)
+        : "";
+
+    if (!sys.ok || !sys.tokens) {
       sub.textContent = "";
-      host.innerHTML =
-        '<li class="artifact-list-empty">No design system yet. When the Design skill writes ' +
-        "<code>design-system.md</code> into this project's <code>figures/</code>, its tokens " +
-        "and a live component preview render here." +
-        (data.error ? ' <span class="muted">(' + escapeHtml(data.error) + ")</span>" : "") +
-        "</li>";
+      const note =
+        '<div class="artifact-list-empty" style="margin-top:14px">No design system chosen yet — ' +
+        (pid ? "pick a direction above" : "open a project first") + "." +
+        (sys.error ? ' <span class="muted">(' + escapeHtml(sys.error) + ")</span>" : "") +
+        "</div>";
+      host.innerHTML = '<li class="design-host">' + strip + note + "</li>";
+      bindStarterButtons();
       return;
     }
-    const t = data.tokens;
+    const t = sys.tokens;
     sub.textContent =
-      data.file +
+      sys.file +
       (t.direction ? " · direction: " + t.direction : "") +
-      (data.variants && data.variants.length > 1 ? " · " + data.variants.length + " variants" : "");
-    host.innerHTML = '<li class="design-host">' + renderDesignPanelHtml(t) + "</li>";
+      (sys.variants && sys.variants.length > 1 ? " · " + sys.variants.length + " variants" : "");
+    host.innerHTML = '<li class="design-host">' + strip + renderDesignPanelHtml(t) + "</li>";
+    bindStarterButtons();
+  }
+
+  // The 7 pre-baked direction starters as a pick strip (each a mini swatch +
+  // a "Use" button that copies that starter into the project's design-system).
+  function renderStarterStripHtml(list) {
+    const cards = list
+      .map((s) => {
+        const c = (s.tokens && s.tokens.color) || {};
+        const sw = ["bg_primary", "accent", "fg_primary"]
+          .map((k) => '<span class="ds-mini" style="background:' + safeColor(c[k]) + '"></span>')
+          .join("");
+        return (
+          '<div class="ds-dir"><div class="ds-dir-sw">' + sw + "</div>" +
+          '<div class="ds-dir-name">' + escapeHtml(s.direction) + "</div>" +
+          '<button type="button" class="ds-dir-use" data-dir="' + escapeAttr(s.direction) + '">Use</button></div>'
+        );
+      })
+      .join("");
+    return '<section class="ds-section"><h3>Pick a direction</h3><div class="ds-dirs">' + cards + "</div></section>";
+  }
+
+  function bindStarterButtons() {
+    document.querySelectorAll(".ds-dir-use").forEach((b) =>
+      b.addEventListener("click", () => useDirection(b.dataset.dir)),
+    );
+  }
+
+  async function useDirection(direction) {
+    const pid = PROJECTS_STATE.current_id;
+    if (!pid) { toast("Pick or create a project first."); return; }
+    try {
+      const r = await fetch("/api/design/use-starter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ direction, project: pid }),
+      });
+      if (!r.ok) { toast(`Couldn't apply ${direction}: ${await r.text()}`); return; }
+      toast(`Applied direction: ${direction}`);
+      renderDesignView(); // refresh — now an active design-system exists
+    } catch {
+      toast("Network error applying direction.");
+    }
   }
 
   function swatchRow(label, value) {

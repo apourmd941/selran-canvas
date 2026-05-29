@@ -212,6 +212,69 @@ def build_webapp(store: Store) -> FastAPI:
             {"ok": True, "file": name, "tokens": tokens, "variants": sorted(names)}
         )
 
+    # The design skill's 7 pre-baked direction starters (editorial, brutalist,
+    # …) — each a full design-system.md. Located next to Canvas under the
+    # sibling design-skill repo. Powers the "pick a direction" strip.
+    def _design_starters_dir():
+        from pathlib import Path
+
+        nd = Path(__file__).resolve().parents[2]  # ~/NeutronDev (canvas repo's parent)
+        candidates = [
+            nd / "Selron design director skill" / "selran-design-director" / "assets" / "direction-starters",
+            nd / "Selran design skill platform" / "assets" / "direction-starters",
+            nd / "selran-design" / "assets" / "direction-starters",
+        ]
+        for c in candidates:
+            if c.is_dir():
+                return c
+        for pat in ("*/assets/direction-starters", "*/*/assets/direction-starters"):
+            for m in nd.glob(pat):
+                if m.is_dir():
+                    return m
+        return None
+
+    def _parse_frontmatter(text: str):
+        import yaml
+
+        if text.startswith("---"):
+            end = text.find("\n---", 3)
+            if end != -1:
+                try:
+                    return yaml.safe_load(text[3:end])
+                except yaml.YAMLError:
+                    return None
+        return None
+
+    @app.get("/api/design/starters")
+    async def api_design_starters():
+        d = _design_starters_dir()
+        if not d:
+            return JSONResponse({"ok": False, "error": "design skill not found", "starters": []})
+        out = []
+        for f in sorted(d.glob("*.md")):
+            toks = _parse_frontmatter(f.read_text(encoding="utf-8", errors="replace"))
+            if toks:
+                out.append({"direction": toks.get("direction") or f.stem, "tokens": toks})
+        return JSONResponse({"ok": True, "starters": out})
+
+    @app.post("/api/design/use-starter")
+    async def api_design_use_starter(payload: dict):
+        direction = (payload.get("direction") or "").strip()
+        slug = payload.get("project") or projects.get_current_id()
+        if not direction or not slug:
+            raise HTTPException(400, "need direction + project")
+        d = _design_starters_dir()
+        src = (d / f"{direction}.md") if d else None
+        if not src or not src.is_file():
+            raise HTTPException(404, f"unknown direction {direction!r}")
+        subdir = projects.COMPANION_TO_SUBDIR.get("selran-design", "figures")
+        dest_dir = projects.PROJECTS_ROOT / slug / subdir
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        (dest_dir / "design-system.md").write_text(
+            src.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        return JSONResponse({"ok": True, "direction": direction, "wrote": "design-system.md"})
+
     @app.post("/api/templates/{template_id}/scaffold")
     async def api_template_scaffold(template_id: str, payload: dict | None = None):
         tmpl = templates.get_template(template_id)
