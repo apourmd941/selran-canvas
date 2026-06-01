@@ -20,6 +20,7 @@
   "required": true,
   "install": {
     "source": { "kind": "bundled" },
+    "egress": "local+server+cloud",
     "python": { "package": ".", "editable": true },
     "home": "~/.selran-canvas",
     "ports": 2,
