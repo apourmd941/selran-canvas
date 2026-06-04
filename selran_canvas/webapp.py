@@ -50,7 +50,7 @@ def build_webapp(store: Store) -> FastAPI:
         app.state.store = store
         yield
 
-    app = FastAPI(title="Selran Canvas", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Selran Canvas", version="2.0.0", lifespan=lifespan)
 
     # Static (canvas/index.html, canvas.js, canvas.css)
     if CANVAS_DIR.is_dir():
