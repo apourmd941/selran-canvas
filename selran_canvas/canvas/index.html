@@ -9,6 +9,27 @@
 </head>
 <body data-theme="draft" data-mode="section">
 
+<!-- Selran launch splash (self-removing overlay; vanilla equivalent of the React AppSplash).
+     Neutral "Selran" mark — this one server is shared by Canvas and the Writer skill. -->
+<div id="selran-splash">
+  <div class="ssh"></div>
+  <div class="ssl"><svg viewBox="0 0 144 144" style="width:100%;height:100%"><defs><linearGradient id="ssg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#14b8a6"/><stop offset="100%" stop-color="#0d9488"/></linearGradient></defs><rect x="12" y="12" width="120" height="120" rx="24" fill="url(#ssg)"/><text x="72" y="92" font-family="system-ui,-apple-system,sans-serif" font-size="68" font-weight="700" fill="#fff" text-anchor="middle">S</text></svg></div>
+  <div class="ssw"><span class="ssw-s">Selran</span><span class="ssw-t">DOCUMENT WORKSPACE</span></div>
+</div>
+<style>
+  #selran-splash{position:fixed;inset:0;z-index:2147483647;background:#0a1428;display:flex;align-items:center;justify-content:center;transition:opacity .24s ease-out}
+  #selran-splash.ss-fade{opacity:0;pointer-events:none}
+  #selran-splash .ssh{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:1288px;height:1288px;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,0.16) 0%,transparent 70%);transition:opacity .3s cubic-bezier(.4,0,.2,1)}
+  #selran-splash.ss-shrink .ssh{opacity:0}
+  #selran-splash .ssl{position:fixed;left:50%;top:50%;width:460px;height:460px;transform:translate(-50%,-50%);transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1),width .6s cubic-bezier(.4,0,.2,1),height .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
+  #selran-splash.ss-shrink .ssl{left:14px;top:10px;width:40px;height:40px;transform:translate(0,0)}
+  #selran-splash .ssw{position:fixed;left:50%;top:calc(50% + 266px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-family:system-ui,-apple-system,sans-serif;transition:opacity .25s ease-out}
+  #selran-splash.ss-shrink .ssw{opacity:0}
+  #selran-splash .ssw-s{font-size:44px;font-weight:700;color:#e5e7eb;letter-spacing:-.5px}
+  #selran-splash .ssw-t{font-size:13px;color:#6b7280;letter-spacing:1.5px}
+</style>
+<script>(function(){var e=document.getElementById('selran-splash');if(!e)return;setTimeout(function(){e.classList.add('ss-shrink')},750);setTimeout(function(){e.classList.add('ss-fade')},1350);setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e)},1620)})();</script>
+
 <header id="topbar">
   <div class="topbar-left">
     <span class="brand">Selran Canvas</span>

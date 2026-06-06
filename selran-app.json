@@ -13,7 +13,7 @@
     "binary": "selran-canvas",
     "args": []
   },
-  "then_open_url": "http://localhost:15000",
+  "then_open_url": "http://127.0.0.1:12115",
   "companion_starter": "python -m selran_canvas",
   "repo_path": "~/NeutronDev/Selran canvas skill platform",
   "mcp_skill_id": "canvas",

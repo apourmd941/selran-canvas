@@ -2,8 +2,10 @@
 
 Resolution order for the HTTP port:
     1. SELRAN_CANVAS_PORT environment variable (set by your port-registry app)
-    2. 15000 (default; verified low-collision range)
-    3. If 15000 is busy, try 15001..15004 then fail.
+    2. 12115 — Canvas's registered block in the Selran port registry
+       (127.0.0.1:11999): canvas = 12115-12119. Canvas and the Writer skill
+       share this one server, so both manifests open this port.
+    3. If 12115 is busy, try 12116..12119 (the rest of the block) then fail.
 """
 from __future__ import annotations
 
@@ -12,7 +14,10 @@ import socket
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_PORT = 15000
+# Canvas's registered port block (Selran port registry, app_id "canvas"): the
+# server defaults here so it uses its own assigned port instead of a shared
+# hardcoded one. Override with SELRAN_CANVAS_PORT.
+DEFAULT_PORT = 12115
 PORT_RETRY_RANGE = 5
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
