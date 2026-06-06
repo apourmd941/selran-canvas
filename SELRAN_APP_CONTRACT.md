@@ -121,6 +121,27 @@ a fresh one.
 - After editing source, the user applies it via the Launchpad **"Check for
   updates"** (re-sync + rebuild + migrate) — don't invent a parallel install path.
 
+## Shared user memory
+
+A single, suite-wide record of **who the user is** — name, a one-line bio, role, focus,
+and preferences — captured **once** at the Launchpad's first-run **"About you"**
+questionnaire and never re-asked by an app. Plus an **append-only memory** of facts
+apps learn about the user over time. Both are orchestrator-owned: `~/.selran/user_profile.json`
+and `~/.selran/user_memory.jsonl`, served on `127.0.0.1:15454`.
+
+Access (badge-authenticated, `x-selran-token` from `~/.selran/loopback.badge`):
+```
+GET  /v1/user/profile                          → who the user is (name, role, focus, preferences)
+GET  /v1/user/memory?limit=N                   → recent learned facts
+POST /v1/user/memory  { app:"canvas", text, kind } → append an observed fact
+```
+Or via the **Selran hub** (MCP): `user_get_profile`, `user_get_memory`, `user_remember`.
+
+**Rule:** **READ** the profile to personalize (know the user's name/role/preferences);
+**APPEND** observations via the memory endpoint/tool; **DON'T** ask the user their
+identity (that's the Launchpad's job); **DON'T** overwrite the profile
+(`PUT /v1/user/profile` is the Launchpad's first-run write only).
+
 ---
 
 *Canonical sources (in the `Selran-Launchpad-V3` repo): `docs/ARCHITECTURE.md` (the
