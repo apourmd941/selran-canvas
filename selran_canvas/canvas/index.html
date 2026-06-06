@@ -4,10 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Selran Canvas</title>
+  <!-- Shared Selran suite theme — must load FIRST so the app inherits the shared foundation. -->
+  <link rel="stylesheet" href="/static/selran-theme.css">
   <link rel="stylesheet" href="/static/canvas.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23184d8c'/%3E%3Ctext x='32' y='42' font-family='serif' font-size='34' fill='white' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
 </head>
-<body data-theme="draft" data-mode="section">
+<body class="selran-theme" data-theme="draft" data-mode="section">
 
 <!-- Selran launch splash (self-removing overlay; vanilla equivalent of the React AppSplash).
      Neutral "Selran" mark — this one server is shared by Canvas and the Writer skill. -->
@@ -17,7 +19,7 @@
   <div class="ssw"><span class="ssw-s">Selran</span><span class="ssw-t">DOCUMENT WORKSPACE</span></div>
 </div>
 <style>
-  #selran-splash{position:fixed;inset:0;z-index:2147483647;background:#0a1428;display:flex;align-items:center;justify-content:center;transition:opacity .24s ease-out}
+  #selran-splash{position:fixed;inset:0;z-index:2147483647;background:#0B1220;display:flex;align-items:center;justify-content:center;transition:opacity .24s ease-out}
   #selran-splash.ss-fade{opacity:0;pointer-events:none}
   #selran-splash .ssh{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:1288px;height:1288px;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,0.16) 0%,transparent 70%);transition:opacity .3s cubic-bezier(.4,0,.2,1)}
   #selran-splash.ss-shrink .ssh{opacity:0}

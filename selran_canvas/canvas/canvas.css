@@ -6,26 +6,31 @@
  * at the END of this file.
  */
 
+/* Canvas's own design tokens are repointed onto the shared Selran palette
+   (theme/selran-theme.css, loaded first in <head>). The app's layout and token
+   *names* are unchanged — only the underlying color/font values are remapped so
+   Canvas (the shared surface Writer + Design also open) matches the rest of the
+   Selran suite (shared bg/surface/text/accent + Geist). */
 :root {
-  --c-bg: #fafafa;
-  --c-surface: #ffffff;
-  --c-surface-2: #f4f4f6;
-  --c-border: #e2e4e8;
-  --c-text: #1a1d22;
-  --c-muted: #6b7280;
-  --c-accent: #184d8c;
-  --c-accent-soft: #e8eef7;
-  --c-mcq-pending: #fef9c3;
-  --c-mcq-answered: #d9f5dd;
-  --c-diff-add: #fff7c4;
-  --c-toast-bg: #1a1d22;
-  --c-toast-fg: #ffffff;
-  --c-cite: #184d8c;
-  --shadow-1: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  --c-bg: var(--bg);
+  --c-surface: var(--surface);
+  --c-surface-2: var(--surface-2);
+  --c-border: var(--border);
+  --c-text: var(--fg);
+  --c-muted: var(--fg-muted);
+  --c-accent: var(--accent);          /* was canvas blue #184d8c → shared accent */
+  --c-accent-soft: var(--accent-soft);
+  --c-mcq-pending: var(--surface-2);  /* state cards now sit on dark surfaces, */
+  --c-mcq-answered: var(--surface-2); /* tinted via their colored left border  */
+  --c-diff-add: var(--accent-soft);
+  --c-toast-bg: var(--surface-2);
+  --c-toast-fg: var(--fg);
+  --c-cite: var(--accent);
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.28);
   --radius: 8px;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-serif: "Charter", "Iowan Old Style", "Source Serif Pro", Georgia, serif;
-  --font-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  --font-sans: var(--font-body);      /* Geist (was system sans) */
+  --font-serif: var(--font-display);  /* Geist (was Charter serif) */
+  --font-mono: var(--font-mono);      /* Geist Mono */
 }
 
 * { box-sizing: border-box; }
@@ -135,7 +140,7 @@ body {
   gap: 6px;
   transition: background 0.1s;
 }
-#page-nav li:hover { background: rgba(0,0,0,0.04); }
+#page-nav li:hover { background: rgba(255,255,255,0.05); }
 #page-nav li.active {
   background: var(--c-accent-soft);
   color: var(--c-accent);
@@ -150,7 +155,7 @@ body {
   min-width: 16px;
   text-align: center;
 }
-#page-nav .badge.pending { background: #d97706; }
+#page-nav .badge.pending { background: var(--warning); color: var(--accent-contrast); }
 #companion-list li {
   cursor: default;
   color: var(--c-muted);
@@ -160,10 +165,10 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #cbd5e0;
+  background: var(--fg-subtle);
   margin-right: 8px;
 }
-#companion-list li.installed .dot { background: #10b981; }
+#companion-list li.installed .dot { background: var(--success); }
 
 /* ---- Viewer ---- */
 #viewer {
@@ -268,7 +273,7 @@ body {
 
 .guidance-note {
   background: var(--c-accent-soft);
-  border: 1px solid #c7d7ee;
+  border: 1px solid var(--c-border);
   border-left: 4px solid var(--c-accent);
   border-radius: var(--radius);
   margin: 0 0 18px;
@@ -302,7 +307,7 @@ body {
 /* ---- MCQ cards ---- */
 .mcq-card {
   background: var(--c-mcq-pending);
-  border-left: 4px solid #d97706;
+  border-left: 4px solid var(--warning);
   border-radius: var(--radius);
   padding: 14px 16px;
   margin: 18px 0;
@@ -311,7 +316,7 @@ body {
 }
 .mcq-card.answered {
   background: var(--c-mcq-answered);
-  border-left-color: #059669;
+  border-left-color: var(--success);
 }
 .mcq-card .mcq-question {
   font-weight: 600;
@@ -326,16 +331,17 @@ body {
   text-align: left;
   padding: 8px 10px;
   border: 1px solid var(--c-border);
-  background: rgba(255,255,255,0.6);
+  background: var(--surface);
+  color: var(--c-text);
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
   font-size: inherit;
 }
-.mcq-card button:hover { background: rgba(255,255,255,1); }
+.mcq-card button:hover { background: var(--surface-2); }
 .mcq-card button.selected {
   background: var(--c-accent);
-  color: white;
+  color: var(--accent-contrast);
   border-color: var(--c-accent);
   cursor: default;
 }
@@ -389,9 +395,12 @@ body {
 
 /* ---- Comment layer (v1.1) ---- */
 :root {
-  --c-comment-hl: #fde68a;        /* anchored-text highlight (amber) */
-  --c-comment-hl-flash: #fbbf24;  /* brief flash when navigated to */
-  --c-comment-accent: #b45309;
+  /* Anchored-text highlights stay a bright amber wash so the page's light text
+     stays readable on top of them; the accent (used for borders/labels) is the
+     shared warning amber so it reads on dark surfaces. */
+  --c-comment-hl: rgba(230, 180, 80, 0.32);   /* anchored-text highlight (amber) */
+  --c-comment-hl-flash: rgba(230, 180, 80, 0.55); /* brief flash when navigated to */
+  --c-comment-accent: var(--warning);
 }
 
 mark.comment-anchor {
@@ -408,7 +417,7 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   position: fixed;
   z-index: 30;
   background: var(--c-accent);
-  color: #fff;
+  color: var(--accent-contrast);
   border: none;
   border-radius: 6px;
   padding: 6px 12px;
@@ -457,7 +466,7 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
 }
 .topbar-btn.primary {
   background: var(--c-accent);
-  color: #fff;
+  color: var(--accent-contrast);
   border-color: var(--c-accent);
 }
 .topbar-btn.primary:hover { filter: brightness(1.08); }
@@ -506,7 +515,7 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   font-size: 13px;
 }
 .comment-item.resolved {
-  border-left-color: #059669;
+  border-left-color: var(--success);
   opacity: 0.7;
 }
 .comment-item.flash { outline: 2px solid var(--c-comment-hl-flash); }
@@ -530,7 +539,7 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   font-family: var(--font-sans);
 }
 .comment-actions button:hover { background: var(--c-accent-soft); }
-.comment-resolved-tag { font-size: 11px; color: #059669; }
+.comment-resolved-tag { font-size: 11px; color: var(--success); }
 
 @media (max-width: 800px) {
   #comments-panel { display: none; }
@@ -561,16 +570,30 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
 @keyframes toast-out { to { opacity: 0; transform: translateY(-4px); } }
 
 /* ---- Theme: print ---- */
+/* Print mode is a WYSIWYG paper preview: the page renders as physical white
+   paper. Because the shared theme makes the default page text light, scope a
+   dark ink colour to the white print pages so the paper preview stays legible
+   (dark ink on white paper). Layout is unchanged. */
 [data-theme="print"] #viewer { background: #d1d5db; }
 [data-theme="print"] #page-view, [data-theme="print"] #manuscript-view {
   background: white;
+  color: #1a1d22;
   padding: 56px 64px;
   border: 1px solid var(--c-border);
   box-shadow: var(--shadow-1);
 }
+[data-theme="print"] #page-view h1, [data-theme="print"] #manuscript-view h1,
+[data-theme="print"] #page-view h2, [data-theme="print"] #manuscript-view h2,
+[data-theme="print"] #page-view h3, [data-theme="print"] #manuscript-view h3,
+[data-theme="print"] #page-view p,  [data-theme="print"] #manuscript-view p,
+[data-theme="print"] #page-view li, [data-theme="print"] #manuscript-view li,
+[data-theme="print"] #page-view td, [data-theme="print"] #manuscript-view td,
+[data-theme="print"] #page-view th, [data-theme="print"] #manuscript-view th {
+  color: #1a1d22;
+}
 
 /* ---- Theme: reviewer ---- */
-[data-theme="reviewer"] .diff-add { background: #fef08a; }
+[data-theme="reviewer"] .diff-add { background: var(--accent-soft); }
 [data-theme="reviewer"] #page-view, [data-theme="reviewer"] #manuscript-view {
   font-family: var(--font-sans);
   font-size: 14px;
@@ -607,16 +630,16 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   white-space: nowrap;
 }
 .topbar-btn {
-  background: var(--c-button-bg, #1f2937);
-  color: var(--c-button-fg, #f3f4f6);
-  border: 1px solid var(--c-border, #374151);
+  background: var(--c-button-bg, var(--surface-2));
+  color: var(--c-button-fg, var(--fg));
+  border: 1px solid var(--c-border, var(--border));
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
   font-family: var(--font-sans);
 }
-.topbar-btn:hover { background: var(--c-button-hover-bg, #374151); }
+.topbar-btn:hover { background: var(--c-button-hover-bg, var(--border)); }
 
 /* ---- Companion list interactivity ---- */
 /* Companions used to be display-only dots; Phase 2 makes them
@@ -633,8 +656,8 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   background: var(--c-hover-bg, rgba(255,255,255,0.05));
 }
 #companion-list li.active {
-  background: var(--c-accent-bg, rgba(99,102,241,0.18));
-  color: var(--c-accent-fg, #a5b4fc);
+  background: var(--c-accent-bg, var(--accent-soft));
+  color: var(--c-accent-fg, var(--accent));
 }
 
 /* ---- Companion artifact view ---- */
@@ -691,8 +714,8 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
   font-family: var(--font-mono, monospace);
 }
 .artifact-reader pre {
-  background: var(--c-code-bg, #0f1117);
-  color: var(--c-code-fg, #e5e7eb);
+  background: var(--c-code-bg, var(--bg-subtle));
+  color: var(--c-code-fg, var(--fg));
   padding: 16px;
   border-radius: 6px;
   overflow: auto;
@@ -787,7 +810,7 @@ mark.comment-anchor.flash { background: var(--c-comment-hl-flash); }
 .ds-save {
   font-size: 12px; font-weight: 600; padding: 6px 12px;
   border: 1px solid var(--c-accent); border-radius: 6px;
-  background: var(--c-accent); color: #fff; cursor: pointer;
+  background: var(--c-accent); color: var(--accent-contrast); cursor: pointer;
 }
 .ds-save:hover { opacity: .9; }
 .ds-export-label { margin-left: auto; font-size: 11px; color: var(--c-muted); }
