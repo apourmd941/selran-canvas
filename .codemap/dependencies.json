@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-06T03:51:24Z",
+  "graph": {
+    ".github/workflows/test.yml": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "GPU_AND_LAUNCHPAD.md": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "README.md": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "SELRAN_APP_CONTRACT.md": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "canvas_mcp_plugin/__init__.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "examples/__init__.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "examples/medical_writer_demo.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "install.sh": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "pyproject.toml": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran-app.json": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran-skill.json": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/__init__.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/__main__.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/canvas/canvas.js": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/canvas/index.html": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/canvas/lib/citeproc.js": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/canvas/lib/marked.min.js": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/canvas/lib/purify.min.js": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/companions.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/config.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/csl/manifest.json": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/csl_index.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/fetch_styles.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/migrate_to_pg.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/pg_store.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/projects.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/server.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/store.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/templates.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/webapp.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas.egg-info/SOURCES.txt": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas.egg-info/dependency_links.txt": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas.egg-info/entry_points.txt": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas.egg-info/requires.txt": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas.egg-info/top_level.txt": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "stop.sh": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "tests/__init__.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "tests/test_csl.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "tests/test_mcp_tools.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "tests/test_plugin_contract.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "tests/test_store.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "tests/test_templates.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "tests/test_webapp.py": {
+      "imports_from": [],
+      "imported_by": []
+    }
+  }
+}

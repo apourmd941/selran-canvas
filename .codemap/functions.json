@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-06T03:51:24Z",
+  "files": {},
+  "build_metadata": {
+    "build_method": "py-script-richer",
+    "stages_run": [
+      "1_tags",
+      "2_spec_refs",
+      "3_qualified_names",
+      "4_call_graph"
+    ]
+  }
+}

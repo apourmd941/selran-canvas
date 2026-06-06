@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "cartographer_version": "0.4.1",
+  "created_at": "2026-06-06T03:51:25Z",
+  "last_full_build_at": "2026-06-06T03:51:25Z",
+  "last_full_build_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+  "last_refresh_at": "2026-06-06T03:51:25Z",
+  "last_refresh_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+  "build_metadata": {
+    "files_processed": 43,
+    "languages_detected": [
+      "bash",
+      "html",
+      "javascript",
+      "json",
+      "markdown",
+      "python",
+      "text",
+      "toml",
+      "yaml"
+    ],
+    "build_method": "py-script-richer",
+    "stages_run": [
+      "1_tags",
+      "2_spec_refs",
+      "3_qualified_names",
+      "4_call_graph"
+    ],
+    "note": "Stages 1+2+3 default-on (tag propagation, spec_refs, qualified names, git blame). Stage 4 (call graph) is opt-in."
+  },
+  "configured_entry_points": [
+    "Cargo.toml",
+    "index.html",
+    "index.js",
+    "lib.rs",
+    "main.py",
+    "main.rs",
+    "package.json",
+    "tauri.conf.json"
+  ],
+  "per_file_state": {
+    ".github/workflows/test.yml": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:3b3842a0762c80283915fd0e75f0f408c240162dc3a2454b28fc3571400f8331",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "GPU_AND_LAUNCHPAD.md": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:ab94dd1ddfe5cec2d34860dc7b565abfb0782b5bb6baec64077b2531725a2d83",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "README.md": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:28b91fae243b70e675d8f1118dc37cc448bcc4836b4771df0a1ed6a67708c3d1",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "SELRAN_APP_CONTRACT.md": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:c641d3263770a4c5a19d660e159ec9889c294873d8a0a8445bb2bd76fdff3198",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "canvas_mcp_plugin/__init__.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:44efa9af8ea9feeda33c7fa42f2d6abba596fd9751727014e2ce6d48f6effc73",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "examples/__init__.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "examples/medical_writer_demo.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:d1ae38a75175ff733306dcd7734f3f57a61e61347f83619a8bb3b2029075d668",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "install.sh": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:787c7229e42563dc097c81770e89284ddf32738bf00b6a3cfce536e7cd144da2",
+      "last_modified_in_git": "2026-06-06T03:51:24Z"
+    },
+    "pyproject.toml": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:6de56c6411303ca8c4dd8383767b75c1a760382e5bda92db4f146aeec18e35e9",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran-app.json": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:06ddc20a2722593455e38df4e27824ca0b997a762379b30175e24fb25e0c0f3a",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran-skill.json": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:f6eaaaae3b43f4a8ff402bb8f8c93c5f8e40dcab1f23b58512047c412f12909e",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/__init__.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:6f8e0496e9e0bf84b7a84394ca59f731d0bf15717f15585c8e805d186dbdb318",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/__main__.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:a05327ea7ec4c724b07e04eeffc894e4aeb3e42a1cc7e8bc03bf65c3eeab9416",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/canvas/canvas.js": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:605876f7cf61bfd908d4687c4d4944177a046784c7bc1602466c161eeb035be4",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/canvas/index.html": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:6d02e31bb59e7ffee5df8b02f08b0be70b768171cae3c0f9c17c06d9c1a2f426",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/canvas/lib/citeproc.js": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:e5c55d620c2af0b98278bb1c8275a18120d9547777a39226a4eba9b36590ced7",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/canvas/lib/marked.min.js": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:5adea7d8ee41a700fccc14bb9d503104f0470cc17a84ad3e167d3f5251eae0da",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/canvas/lib/purify.min.js": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:c0845096a7c4a6741f362ac506c94c1c7d27dc603bcc1bf64a587f76f2dbe3a1",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/companions.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:3dc9bdf86a7c0d1e2d03cf1cf4da90a4b9a2cd9a5bdf0a378c8555d733238751",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/config.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:ce783fb516b4a4f57de82ce1defd7c1a02dc34bf8166d05e3c5f54104e25a7dd",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/csl/manifest.json": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:6ee61d8817c82e974767b84ed4f9c50d716e55d3c05fb5ca30ca25952893ee7c",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/csl_index.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:c7d3659e22fe40964d071dd4a1a1146c0307a4baf09fde35a85da98843775e0c",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/fetch_styles.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:3be80e1cd43be45a082b5bbb1e92c25a4285de6705b581837dd407ba8bcd053d",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/migrate_to_pg.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:06851f7aeca5280a6bda3244c12fa64c661f261e45fce5352aa89b472c20d34b",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/pg_store.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:b40996a69c405453950679adf8a2751a8ef40bbc97b9dda07408bae1ea67ca20",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/projects.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:346014b9c81d5162df734b556a60ff359539005f847dfd6d1a8dffd8d9940512",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/server.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:c2e185176fcc140a6f7b825976c479d756a38a197ca4d3c5dbb1fcf3c6ae3ae6",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/store.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:e001783637c3dd8b7108c9c66873310dce0600fa37432c5edd2d001d597ac77e",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/templates.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:a4277d9ee93ea522732c0ce51985c08f36c48974f915b9c102712f5492397f47",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas/webapp.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:0b7b1a31c1a0fa75c9400533eac6e03f8a039fc318d26692eea3d172b3268a96",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas.egg-info/SOURCES.txt": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:48b4d6f00b661ce3feee22b84199f58908a3f9f760d403c60f0a8b957da10274",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas.egg-info/dependency_links.txt": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas.egg-info/entry_points.txt": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:6eb693d78fb8db75575ad9618c04ecab5ec7ae4d4e7ff6edd1d7fc33f87076d6",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas.egg-info/requires.txt": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:af1a504f8d141971d0dbf44bf6f7a40564952ddf962bcebeb87b02b7ddecc8e2",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "selran_canvas.egg-info/top_level.txt": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:33199c680e3024556dbd1ba8a816dbf2b5f7109ef4a4685c34467f4d7ffc1cc1",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "stop.sh": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:f84eed7c24b6a17fd1e74f258ad0a05fc36e4608570533ec15193ee67e51c06f",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "tests/__init__.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "tests/test_csl.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:0fd28f199dec4d88a994ced7163426cb0da6fb485cdf392461f96efb1f33f37b",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "tests/test_mcp_tools.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:f2ce116a146e53f78020937465344be2d22e6812da51ee91b0cb739aac1e84bb",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "tests/test_plugin_contract.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:af1aad64b0621af56f2c5b4cf54046013c97c3bac75b440f9065380137f12f8a",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "tests/test_store.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:61cadcf6c4228fdbfae9ee9abe68f230321a768e5ff6b9e536e5b26fa52124bc",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "tests/test_templates.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:9c972e04552c7bf242032a47b96e07385f7d80060c28cf216e51e6605f8cb460",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    },
+    "tests/test_webapp.py": {
+      "last_refreshed_commit": "6c479b6a8ad83d51beb55b1137ea3a7e64791c27-dirty",
+      "content_hash": "sha256:6f223d44020d934cd51b922f89b96ea7d008119c06c544b0e32303d336927646",
+      "last_modified_in_git": "2026-06-06T03:51:25Z"
+    }
+  }
+}

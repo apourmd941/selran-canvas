@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-06T03:51:25Z",
+  "summary": {
+    "duplicate_basenames": 1,
+    "suspicious_names": 0,
+    "backup_directories": 0,
+    "orphan_files": 27,
+    "near_duplicates": 0,
+    "stale_build_output": 0,
+    "canonical_designations": 0
+  },
+  "duplicate_basenames": [
+    {
+      "basename": "__init__.py",
+      "paths": [
+        "canvas_mcp_plugin/__init__.py",
+        "examples/__init__.py",
+        "selran_canvas/__init__.py",
+        "tests/__init__.py"
+      ],
+      "imported_count": 0,
+      "severity": "medium",
+      "concern": "`__init__.py` appears in 4 locations."
+    }
+  ],
+  "suspicious_names": [],
+  "backup_directories": [],
+  "orphan_files": [
+    {
+      "path": "canvas_mcp_plugin/__init__.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "examples/__init__.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "examples/medical_writer_demo.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/__init__.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/__main__.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/canvas/canvas.js",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/canvas/lib/citeproc.js",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/canvas/lib/marked.min.js",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/canvas/lib/purify.min.js",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/companions.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/config.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/csl_index.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/fetch_styles.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/migrate_to_pg.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/pg_store.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/projects.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/server.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/store.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/templates.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "selran_canvas/webapp.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "tests/__init__.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "tests/test_csl.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "tests/test_mcp_tools.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "tests/test_plugin_contract.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "tests/test_store.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "tests/test_templates.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    },
+    {
+      "path": "tests/test_webapp.py",
+      "severity": "low",
+      "concern": "Source file has no `imported_by` entries; may be unreachable.",
+      "is_entry_point": false,
+      "suggested_action": "Check whether this file is dynamically loaded."
+    }
+  ],
+  "near_duplicates": [],
+  "stale_build_output": [],
+  "canonical_designations": []
+}

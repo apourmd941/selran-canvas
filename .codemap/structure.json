@@ -1,0 +1,546 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-06T03:51:24Z",
+  "root": "/Users/aidin/NeutronDev/Selran canvas skill platform",
+  "languages_detected": [
+    "bash",
+    "html",
+    "javascript",
+    "json",
+    "markdown",
+    "python",
+    "text",
+    "toml",
+    "yaml"
+  ],
+  "files_count": 43,
+  "directories": [],
+  "files": {
+    ".github/workflows/test.yml": {
+      "kind": "config",
+      "language": "yaml",
+      "loc": 68,
+      "size_bytes": 2500,
+      "purpose": "",
+      "tags": [
+        "config"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "GPU_AND_LAUNCHPAD.md": {
+      "kind": "documentation",
+      "language": "markdown",
+      "loc": 181,
+      "size_bytes": 9179,
+      "purpose": "GPU & Launchpad \u2014 how this app uses (or doesn't use) the GPU",
+      "tags": [
+        "documentation",
+        "informational"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false,
+      "doc_class": "informational",
+      "section_count": 9
+    },
+    "README.md": {
+      "kind": "documentation",
+      "language": "markdown",
+      "loc": 323,
+      "size_bytes": 22574,
+      "purpose": "Selran Canvas",
+      "tags": [
+        "documentation",
+        "informational"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false,
+      "doc_class": "informational",
+      "section_count": 22
+    },
+    "SELRAN_APP_CONTRACT.md": {
+      "kind": "documentation",
+      "language": "markdown",
+      "loc": 131,
+      "size_bytes": 6744,
+      "purpose": "Selran App Contract \u2014 Selran Canvas (`canvas`)",
+      "tags": [
+        "documentation",
+        "informational"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false,
+      "doc_class": "informational",
+      "section_count": 8
+    },
+    "canvas_mcp_plugin/__init__.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 116,
+      "size_bytes": 4514,
+      "purpose": "\"\"\"selran-mcp Path B plugin for Selran Canvas.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "examples/__init__.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 1,
+      "size_bytes": 0,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "examples/medical_writer_demo.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 158,
+      "size_bytes": 7628,
+      "purpose": "\"\"\"Smoke test demo \u2014 seeds a 3-page manuscript with citations + MCQs.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "install.sh": {
+      "kind": "other",
+      "language": "bash",
+      "loc": 45,
+      "size_bytes": 1605,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "pyproject.toml": {
+      "kind": "config",
+      "language": "toml",
+      "loc": 50,
+      "size_bytes": 1150,
+      "purpose": "",
+      "tags": [
+        "config"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran-app.json": {
+      "kind": "config",
+      "language": "json",
+      "loc": 31,
+      "size_bytes": 936,
+      "purpose": "",
+      "tags": [
+        "config"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran-skill.json": {
+      "kind": "config",
+      "language": "json",
+      "loc": 14,
+      "size_bytes": 816,
+      "purpose": "",
+      "tags": [
+        "config"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/__init__.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 10,
+      "size_bytes": 284,
+      "purpose": "\"\"\"Selran Canvas \u2014 page-aware canvas for Claude.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/__main__.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 122,
+      "size_bytes": 4350,
+      "purpose": "\"\"\"Entry point: run MCP server + HTTP/WebSocket server in one process.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/canvas/canvas.js": {
+      "kind": "source",
+      "language": "javascript",
+      "loc": 1380,
+      "size_bytes": 54467,
+      "purpose": "Selran Canvas \u2014 frontend",
+      "tags": [
+        "frontend"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/canvas/index.html": {
+      "kind": "other",
+      "language": "html",
+      "loc": 193,
+      "size_bytes": 9989,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": true,
+      "test_file": false
+    },
+    "selran_canvas/canvas/lib/citeproc.js": {
+      "kind": "source",
+      "language": "javascript",
+      "loc": 25029,
+      "size_bytes": 969672,
+      "purpose": "Copyright (c) 2009-2019 Frank Bennett",
+      "tags": [
+        "frontend"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/canvas/lib/marked.min.js": {
+      "kind": "source",
+      "language": "javascript",
+      "loc": 7,
+      "size_bytes": 38701,
+      "purpose": "* marked v13.0.3 - a markdown parser",
+      "tags": [
+        "frontend"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/canvas/lib/purify.min.js": {
+      "kind": "source",
+      "language": "javascript",
+      "loc": 4,
+      "size_bytes": 21496,
+      "purpose": "! @license DOMPurify 3.1.6 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPur",
+      "tags": [
+        "frontend"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/companions.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 119,
+      "size_bytes": 4069,
+      "purpose": "\"\"\"Detect sibling Selran skill plugins.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/config.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 87,
+      "size_bytes": 2659,
+      "purpose": "\"\"\"Configuration: ports, paths, defaults.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/csl/manifest.json": {
+      "kind": "config",
+      "language": "json",
+      "loc": 131,
+      "size_bytes": 15557,
+      "purpose": "",
+      "tags": [
+        "config"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/csl_index.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 132,
+      "size_bytes": 4738,
+      "purpose": "\"\"\"CSL style management.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/fetch_styles.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 65,
+      "size_bytes": 2052,
+      "purpose": "\"\"\"Admin script: pre-fetch all 100 manifest CSL styles from the Zotero repo.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/migrate_to_pg.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 102,
+      "size_bytes": 3897,
+      "purpose": "\"\"\"One-shot migration: copy Canvas SQLite state \u2192 managed Postgres.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/pg_store.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 425,
+      "size_bytes": 15940,
+      "purpose": "\"\"\"Postgres-backed state store \u2014 the v3 (Selran Launchpad) backend.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/projects.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 335,
+      "size_bytes": 11552,
+      "purpose": "\"\"\"Project model \u2014 Canvas-side mirror of the on-disk project layout.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/server.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 355,
+      "size_bytes": 15652,
+      "purpose": "\"\"\"FastMCP server exposing 10 tools for Claude.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/store.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 498,
+      "size_bytes": 18384,
+      "purpose": "\"\"\"SQLite-backed state store.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/templates.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 106,
+      "size_bytes": 3479,
+      "purpose": "\"\"\"Locate + load the medical-writer templates manifest.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/webapp.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 489,
+      "size_bytes": 21351,
+      "purpose": "\"\"\"FastAPI app + WebSocket broadcaster.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas.egg-info/SOURCES.txt": {
+      "kind": "other",
+      "language": "text",
+      "loc": 109,
+      "size_bytes": 5005,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas.egg-info/dependency_links.txt": {
+      "kind": "other",
+      "language": "text",
+      "loc": 2,
+      "size_bytes": 1,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas.egg-info/entry_points.txt": {
+      "kind": "other",
+      "language": "text",
+      "loc": 3,
+      "size_bytes": 62,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas.egg-info/requires.txt": {
+      "kind": "other",
+      "language": "text",
+      "loc": 12,
+      "size_bytes": 149,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas.egg-info/top_level.txt": {
+      "kind": "other",
+      "language": "text",
+      "loc": 2,
+      "size_bytes": 14,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "stop.sh": {
+      "kind": "other",
+      "language": "bash",
+      "loc": 21,
+      "size_bytes": 669,
+      "purpose": "",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "tests/__init__.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 1,
+      "size_bytes": 0,
+      "purpose": "",
+      "tags": [
+        "test"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "tests/test_csl.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 93,
+      "size_bytes": 3672,
+      "purpose": "\"\"\"Tests for the CSL manifest + index.\"\"\"",
+      "tags": [
+        "test"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "tests/test_mcp_tools.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 359,
+      "size_bytes": 13046,
+      "purpose": "\"\"\"Tests for the 7 MCP tools \u2014 exercise their behaviour through the FastMCP API.\"\"\"",
+      "tags": [
+        "test"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "tests/test_plugin_contract.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 145,
+      "size_bytes": 5380,
+      "purpose": "\"\"\"Test the selran-mcp Path B plugin contract.",
+      "tags": [
+        "test"
+      ],
+      "spec_refs": [
+        {
+          "ref": "\u00a74",
+          "source": "explicit",
+          "confidence": 1.0
+        }
+      ],
+      "entry_point": false,
+      "test_file": false
+    },
+    "tests/test_store.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 208,
+      "size_bytes": 7360,
+      "purpose": "\"\"\"Tests for the SQLite-backed store.\"\"\"",
+      "tags": [
+        "test"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "tests/test_templates.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 136,
+      "size_bytes": 4767,
+      "purpose": "\"\"\"Tests for the templates loader + the scaffold HTTP endpoints.",
+      "tags": [
+        "test"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "tests/test_webapp.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 174,
+      "size_bytes": 5582,
+      "purpose": "\"\"\"End-to-end tests for the FastAPI HTTP layer.\"\"\"",
+      "tags": [
+        "test"
+      ],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    }
+  }
+}
