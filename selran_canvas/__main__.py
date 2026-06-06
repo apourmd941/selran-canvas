@@ -89,6 +89,12 @@ def main(argv: list[str] | None = None) -> int:
         seed_demo(store)
         print(f"Demo seeded. Open {cfg.url}")
 
+    # Read the suite-wide user profile once on launch (orchestrator-owned, fetched
+    # via the badge-authenticated client) so Claude can address the user by name and
+    # respect their role/focus/preferences. Degrades to anonymous if unreachable.
+    from .user_profile import load_user_profile
+    load_user_profile()
+
     app = build_webapp(store)
     _start_http_server(app, cfg.host, cfg.port)
     print(f"Selran Canvas running at {cfg.url}", file=sys.stderr)

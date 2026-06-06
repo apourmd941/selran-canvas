@@ -47,6 +47,11 @@ def build_mcp_server(
     companions = detect_companions()
     store.set_kv("companions_json", json.dumps(companions))
 
+    # Read the suite-wide user profile once (orchestrator-owned, via the badge-
+    # authenticated client) so canvas_get_state can hand Claude the user's identity.
+    # Idempotent with the HTTP startup load; degrades to no identity when absent.
+    from .user_profile import get_cached_profile, identity_line
+
     # --- canvas_set_page --------------------------------------------------
 
     @mcp.tool()
@@ -189,6 +194,9 @@ def build_mcp_server(
     @mcp.tool()
     def canvas_get_state() -> dict:
         """Read everything Claude needs to act:
+            - user / user_identity (who you're assisting: name, role, focus,
+              preferences — from the suite-wide profile; address them by name and
+              respect their preferences. Empty when no profile is set.)
             - current_page (which page user is viewing)
             - viewing_mode (section | manuscript | diff)
             - journal_style + visual_theme
@@ -202,6 +210,9 @@ def build_mcp_server(
         """
         snap = store.snapshot_dict()
         snap["http_url"] = http_url
+        profile = get_cached_profile()
+        snap["user"] = profile or {}
+        snap["user_identity"] = identity_line(profile)
         return snap
 
     # --- canvas_add_references -------------------------------------------

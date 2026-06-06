@@ -48,6 +48,11 @@ def build_webapp(store: Store) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.store = store
+        # Read the suite-wide user profile once on startup (orchestrator-owned,
+        # via the badge-authenticated client) and cache it in app state. Idempotent
+        # with __main__'s eager load; degrades to None when unreachable.
+        from .user_profile import get_cached_profile
+        app.state.user_profile = get_cached_profile()
         yield
 
     app = FastAPI(title="Selran Canvas", version="2.0.0", lifespan=lifespan)
@@ -69,7 +74,27 @@ def build_webapp(store: Store) -> FastAPI:
 
     @app.get("/api/state")
     async def api_state():
-        return JSONResponse(store.snapshot_dict())
+        from .user_profile import get_cached_profile, identity_line
+
+        snap = store.snapshot_dict()
+        profile = get_cached_profile()
+        snap["user"] = profile or {}
+        snap["user_identity"] = identity_line(profile)
+        return JSONResponse(snap)
+
+    @app.get("/api/user")
+    async def api_user():
+        """The cached suite-wide user profile (read-only). `profile` is {} when
+        none is set; `identity` is the one-line summary Claude sees in its canvas
+        context (empty when anonymous)."""
+        from .user_profile import get_cached_profile, identity_line
+
+        profile = get_cached_profile()
+        return JSONResponse({
+            "exists": bool(profile),
+            "profile": profile or {},
+            "identity": identity_line(profile),
+        })
 
     @app.get("/api/csl/locale.xml")
     async def api_locale(lang: str = "en-US"):
