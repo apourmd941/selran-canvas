@@ -10,8 +10,8 @@
   "accent": "#F59E0B",
   "launch": {
     "kind": "spawn",
-    "binary": "selran-canvas",
-    "args": []
+    "binary": "bash",
+    "args": ["start.sh"]
   },
   "then_open_url": "http://127.0.0.1:12115",
   "companion_starter": "python -m selran_canvas",
