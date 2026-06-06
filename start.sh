@@ -53,4 +53,13 @@ echo "[canvas] starting ${CANVAS_BIN} on :${PORT} (UI + API, one process)…"
 # the window. CANVAS_DATABASE_URL is exported by the Launchpad (install.env).
 export SELRAN_CANVAS_PORT="${PORT}"
 export SELRAN_CANVAS_AUTO_OPEN=0
-exec "$CANVAS_BIN"
+# Fall back to the managed-pg canvas DB (loopback trust auth) if the Launchpad
+# didn't export it — e.g. when Canvas is started by Writer/Design rather than
+# launched directly. Canvas creates its schema on connect.
+export CANVAS_DATABASE_URL="${CANVAS_DATABASE_URL:-postgresql://canvas@127.0.0.1:15432/canvas}"
+# --http-only is REQUIRED for the standalone web-window launch: the default mode
+# keeps the process alive via the MCP-over-stdio loop in the main thread, which
+# hits EOF instantly when there's no stdin pipe (Launchpad/nohup) — the process
+# then exits and the daemon HTTP thread dies. --http-only uses the sleep-loop
+# keep-alive instead, so the server actually stays up and serves.
+exec "$CANVAS_BIN" --http-only
