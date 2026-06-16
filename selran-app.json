@@ -2,7 +2,7 @@
   "selran_app_version": 1,
   "id": "canvas",
   "name": "Selran Canvas",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "summary": "Page-aware companion canvas for Claude — manuscript pages, inline MCQ, and 100+ citation styles.",
   "tags": ["canvas", "companion", "manuscripts", "citations"],
   "category": "writing",
