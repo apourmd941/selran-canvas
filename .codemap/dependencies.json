@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-06T03:51:24Z",
+  "generated_at": "2026-06-18T01:00:24Z",
   "graph": {
     ".github/workflows/test.yml": {
       "imports_from": [],
@@ -51,6 +51,10 @@
       "imported_by": []
     },
     "selran_canvas/__main__.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
+    "selran_canvas/_selran_client.py": {
       "imports_from": [],
       "imported_by": []
     },
@@ -118,27 +122,15 @@
       "imports_from": [],
       "imported_by": []
     },
+    "selran_canvas/user_profile.py": {
+      "imports_from": [],
+      "imported_by": []
+    },
     "selran_canvas/webapp.py": {
       "imports_from": [],
       "imported_by": []
     },
-    "selran_canvas.egg-info/SOURCES.txt": {
-      "imports_from": [],
-      "imported_by": []
-    },
-    "selran_canvas.egg-info/dependency_links.txt": {
-      "imports_from": [],
-      "imported_by": []
-    },
-    "selran_canvas.egg-info/entry_points.txt": {
-      "imports_from": [],
-      "imported_by": []
-    },
-    "selran_canvas.egg-info/requires.txt": {
-      "imports_from": [],
-      "imported_by": []
-    },
-    "selran_canvas.egg-info/top_level.txt": {
+    "start.sh": {
       "imports_from": [],
       "imported_by": []
     },

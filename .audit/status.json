@@ -1,0 +1,79 @@
+{
+  "schema": "greenloop-status/1",
+  "repo": "selran-canvas",
+  "generated_at": "2026-06-17",
+  "current_round": 1,
+  "profile": "standard",
+  "mode": "non-interactive",
+  "change_scope": "whole-codebase",
+  "commit_at_start": "ec558d3",
+  "scope": {
+    "categories": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "rationale": "first audit; non-interactive scope default = all categories"
+  },
+  "baseline": {
+    "tests": {"passed": 70, "failed": 0},
+    "lint": "clean",
+    "typecheck": "n/a (ruff-only project)",
+    "build_import_smoke": "clean",
+    "smoke_harness": {
+      "http_health": "PASS",
+      "dev_prod_matrix": "PARTIAL (prod/PG not exercised)",
+      "migration_idempotency": "PASS",
+      "webview_e2e": "NOT_SCAFFOLDED",
+      "launch_env_probe": "PASS",
+      "provider_mocks_mcp": "PASS",
+      "onboarding": "N/A"
+    },
+    "harness_failures_converted_to_findings": [],
+    "git": "clean at start; now dirty: .codemap/*, .audit/*, AUDIT_LOG.md"
+  },
+  "detectors": {
+    "gitleaks": "clean",
+    "semgrep_bundled": "1 hit (migrate_to_pg.py:48) adjudicated false-positive",
+    "osv_scanner": "starlette 0.41.3 -> 7 CVEs (3 High) -> GL-R1-012",
+    "available": ["gitleaks", "semgrep", "osv-scanner", "ruff"],
+    "missing": ["greenloop-doctor.sh (plugin script absent)"]
+  },
+  "codemap": {
+    "state": "refreshed_incrementally",
+    "files_mapped": 41,
+    "last_refresh_commit": "ec558d3",
+    "stages": ["1_tags", "2_spec_refs", "3_qualified_names", "4_call_graph"],
+    "caveat": "functions.json empty + capabilities empty; reviewers fell back to Read/Grep",
+    "warnings": {"high": 0, "medium": 30, "low": 0}
+  },
+  "challenge": {
+    "method": "blind-subagent (gl-challenger) + grep self-verify",
+    "challenged": 11,
+    "confirmed": 11,
+    "refuted": 0,
+    "weakened": 1,
+    "cleared_registry_hits": 0
+  },
+  "open": {"critical": 0, "high": 10, "medium": 17, "low": 11, "info": 1},
+  "fixed": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+  "deferred": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+  "dismissed": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+  "suppressed": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+  "totals": {"open_actionable": 38, "open_including_info": 39},
+  "coverage": {
+    "categories_covered": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "could_not_verify": [
+      "Postgres runtime behavior (no managed PG at host)",
+      "Webview/UI e2e (no headless-browser harness)"
+    ]
+  },
+  "history": [
+    {
+      "round": 1,
+      "date": "2026-06-17",
+      "commit": "ec558d3",
+      "scope": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "opened": {"critical": 0, "high": 10, "medium": 17, "low": 11, "info": 1},
+      "fixed": 0,
+      "deferred": 0,
+      "open_actionable": 38
+    }
+  ]
+}

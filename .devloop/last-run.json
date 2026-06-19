@@ -1,0 +1,10 @@
+{
+  "branch": "claude/fleet-20260617-205849-632203d5",
+  "stop_reason": "budget: max_cost ($0.50) reached \u2014 spent $11.43",
+  "iterations": 1,
+  "tokens": 3814568,
+  "cost_usd": 11.4306,
+  "wall_clock_s": 1349.1,
+  "history": [],
+  "dry_run": false
+}

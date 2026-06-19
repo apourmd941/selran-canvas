@@ -1,0 +1,15 @@
+{
+  "schema": "greenloop-run-state/1",
+  "round": 1,
+  "status": "closed",
+  "phase": "5 — Close (complete)",
+  "mode": "non-interactive",
+  "commit_at_start": "ec558d3",
+  "scope_locked": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "execution": "parallel reviewers (7 gl-* agents) + blind challenge (gl-challenger)",
+  "findings_open_actionable": 38,
+  "findings_by_severity": {"critical": 0, "high": 10, "medium": 17, "low": 11, "info": 1},
+  "fixes_applied_this_round": 0,
+  "closed_at": "2026-06-17",
+  "note": "First greenloop audit round. No fixes applied (read-only audit). See AUDIT_LOG.md for the full round entry."
+}

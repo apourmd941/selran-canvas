@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-06T03:51:24Z",
-  "root": "/Users/aidin/NeutronDev/Selran canvas skill platform",
+  "generated_at": "2026-06-18T01:00:24Z",
+  "root": "/Users/aidin/NeutronDev/.greenloop-fleet-worktrees/Selran canvas skill platform-20260617-205849-632203d5",
   "languages_detected": [
     "bash",
     "html",
@@ -9,11 +9,10 @@
     "json",
     "markdown",
     "python",
-    "text",
     "toml",
     "yaml"
   ],
-  "files_count": 43,
+  "files_count": 41,
   "directories": [],
   "files": {
     ".github/workflows/test.yml": {
@@ -64,8 +63,8 @@
     "SELRAN_APP_CONTRACT.md": {
       "kind": "documentation",
       "language": "markdown",
-      "loc": 131,
-      "size_bytes": 6744,
+      "loc": 152,
+      "size_bytes": 7922,
       "purpose": "Selran App Contract \u2014 Selran Canvas (`canvas`)",
       "tags": [
         "documentation",
@@ -75,7 +74,7 @@
       "entry_point": false,
       "test_file": false,
       "doc_class": "informational",
-      "section_count": 8
+      "section_count": 9
     },
     "canvas_mcp_plugin/__init__.py": {
       "kind": "source",
@@ -138,7 +137,7 @@
       "kind": "config",
       "language": "json",
       "loc": 31,
-      "size_bytes": 936,
+      "size_bytes": 937,
       "purpose": "",
       "tags": [
         "config"
@@ -174,11 +173,33 @@
     "selran_canvas/__main__.py": {
       "kind": "source",
       "language": "python",
-      "loc": 122,
-      "size_bytes": 4350,
+      "loc": 128,
+      "size_bytes": 4673,
       "purpose": "\"\"\"Entry point: run MCP server + HTTP/WebSocket server in one process.",
       "tags": [],
       "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
+    "selran_canvas/_selran_client.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 165,
+      "size_bytes": 6894,
+      "purpose": "\"\"\"Selran client \u2014 the thin adapter an app uses to talk to the orchestrator's",
+      "tags": [],
+      "spec_refs": [
+        {
+          "ref": "\u00a76",
+          "source": "explicit",
+          "confidence": 1.0
+        },
+        {
+          "ref": "\u00a75",
+          "source": "explicit",
+          "confidence": 1.0
+        }
+      ],
       "entry_point": false,
       "test_file": false
     },
@@ -198,8 +219,8 @@
     "selran_canvas/canvas/index.html": {
       "kind": "other",
       "language": "html",
-      "loc": 193,
-      "size_bytes": 9989,
+      "loc": 195,
+      "size_bytes": 10168,
       "purpose": "",
       "tags": [],
       "spec_refs": [],
@@ -338,8 +359,8 @@
     "selran_canvas/server.py": {
       "kind": "source",
       "language": "python",
-      "loc": 355,
-      "size_bytes": 15652,
+      "loc": 366,
+      "size_bytes": 16328,
       "purpose": "\"\"\"FastMCP server exposing 10 tools for Claude.",
       "tags": [],
       "spec_refs": [],
@@ -368,66 +389,33 @@
       "entry_point": false,
       "test_file": false
     },
+    "selran_canvas/user_profile.py": {
+      "kind": "source",
+      "language": "python",
+      "loc": 102,
+      "size_bytes": 3989,
+      "purpose": "\"\"\"Shared user profile \u2014 suite-wide identity, orchestrator-owned.",
+      "tags": [],
+      "spec_refs": [],
+      "entry_point": false,
+      "test_file": false
+    },
     "selran_canvas/webapp.py": {
       "kind": "source",
       "language": "python",
-      "loc": 489,
-      "size_bytes": 21351,
+      "loc": 514,
+      "size_bytes": 22445,
       "purpose": "\"\"\"FastAPI app + WebSocket broadcaster.",
       "tags": [],
       "spec_refs": [],
       "entry_point": false,
       "test_file": false
     },
-    "selran_canvas.egg-info/SOURCES.txt": {
+    "start.sh": {
       "kind": "other",
-      "language": "text",
-      "loc": 109,
-      "size_bytes": 5005,
-      "purpose": "",
-      "tags": [],
-      "spec_refs": [],
-      "entry_point": false,
-      "test_file": false
-    },
-    "selran_canvas.egg-info/dependency_links.txt": {
-      "kind": "other",
-      "language": "text",
-      "loc": 2,
-      "size_bytes": 1,
-      "purpose": "",
-      "tags": [],
-      "spec_refs": [],
-      "entry_point": false,
-      "test_file": false
-    },
-    "selran_canvas.egg-info/entry_points.txt": {
-      "kind": "other",
-      "language": "text",
-      "loc": 3,
-      "size_bytes": 62,
-      "purpose": "",
-      "tags": [],
-      "spec_refs": [],
-      "entry_point": false,
-      "test_file": false
-    },
-    "selran_canvas.egg-info/requires.txt": {
-      "kind": "other",
-      "language": "text",
-      "loc": 12,
-      "size_bytes": 149,
-      "purpose": "",
-      "tags": [],
-      "spec_refs": [],
-      "entry_point": false,
-      "test_file": false
-    },
-    "selran_canvas.egg-info/top_level.txt": {
-      "kind": "other",
-      "language": "text",
-      "loc": 2,
-      "size_bytes": 14,
+      "language": "bash",
+      "loc": 66,
+      "size_bytes": 3385,
       "purpose": "",
       "tags": [],
       "spec_refs": [],
