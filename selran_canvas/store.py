@@ -302,10 +302,19 @@ class Store:
             return Page(r["page_id"], r["position"], r["title"], r["content_md"], r["updated_at"], r["guidance"])
 
     def delete_page(self, page_id: str):
+        # GL-R1-014: atomic — the connection is autocommit (isolation_level=None), so
+        # 3 bare DELETEs committed separately could leave orphaned mcqs/comments on a
+        # mid-way crash. Wrap in one transaction (children first, then parent).
         with self._connect() as cx:
-            cx.execute("DELETE FROM pages WHERE page_id=?", (page_id,))
-            cx.execute("DELETE FROM mcqs WHERE page_id=?", (page_id,))
-            cx.execute("DELETE FROM comments WHERE page_id=?", (page_id,))
+            cx.execute("BEGIN")
+            try:
+                cx.execute("DELETE FROM mcqs WHERE page_id=?", (page_id,))
+                cx.execute("DELETE FROM comments WHERE page_id=?", (page_id,))
+                cx.execute("DELETE FROM pages WHERE page_id=?", (page_id,))
+                cx.execute("COMMIT")
+            except Exception:
+                cx.execute("ROLLBACK")
+                raise
         self._bump()
 
     # ---- MCQs -----------------------------------------------------------

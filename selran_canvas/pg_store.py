@@ -241,10 +241,12 @@ class PgStore:
             return Page(r["page_id"], r["position"], r["title"], r["content_md"], r["updated_at"], r["guidance"])
 
     def delete_page(self, page_id: str):
-        with self._connect() as cx:
-            cx.execute("DELETE FROM pages WHERE page_id=%s", (page_id,))
+        # GL-R1-014: atomic (connection is autocommit) — one transaction so a mid-way
+        # failure can't orphan mcqs/comments. Children first, then parent.
+        with self._connect() as cx, cx.transaction():
             cx.execute("DELETE FROM mcqs WHERE page_id=%s", (page_id,))
             cx.execute("DELETE FROM comments WHERE page_id=%s", (page_id,))
+            cx.execute("DELETE FROM pages WHERE page_id=%s", (page_id,))
         self._bump()
 
     # ---- MCQs -----------------------------------------------------------
