@@ -35,7 +35,28 @@ def _open_store(cfg):
     url = os.environ.get("CANVAS_DATABASE_URL", "").strip()
     if url:
         from .pg_store import PgStore
-        return PgStore(url)
+        # GL-R1-004: don't crash-loop if Postgres is briefly unavailable at boot
+        # (main() opens the store before binding the port, and start.sh always exports
+        # a DSN). Retry with bounded backoff, then surface ONE actionable error rather
+        # than an opaque crash. No silent SQLite degrade — that would split data.
+        import time
+        import logging
+        log = logging.getLogger("selran_canvas")
+        attempts = int(os.environ.get("CANVAS_PG_CONNECT_ATTEMPTS", "5"))
+        delay, last_err = 0.5, None
+        for i in range(1, attempts + 1):
+            try:
+                return PgStore(url)
+            except Exception as e:  # noqa: BLE001 - boot resilience
+                last_err = e
+                if i < attempts:
+                    log.warning("Postgres not ready (attempt %d/%d): %s; retry in %.1fs",
+                                i, attempts, e.__class__.__name__, delay)
+                    time.sleep(delay)
+                    delay = min(delay * 2, 8.0)
+        log.error("Postgres unreachable after %d attempts: %r. Fix CANVAS_DATABASE_URL "
+                  "or unset it to use the local SQLite store.", attempts, last_err)
+        raise last_err
     return Store(cfg.db_path)
 
 
