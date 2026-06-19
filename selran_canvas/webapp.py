@@ -283,7 +283,11 @@ def build_webapp(store: Store) -> FastAPI:
             return JSONResponse({"ok": False, "error": "design skill not found", "starters": []})
         out = []
         for f in sorted(d.glob("*.md")):
-            toks = _parse_frontmatter(f.read_text(encoding="utf-8", errors="replace"))
+            # GL-R1-032: one unreadable/garbled starter file must not 500 the whole strip.
+            try:
+                toks = _parse_frontmatter(f.read_text(encoding="utf-8", errors="replace"))
+            except OSError:
+                continue
             if toks:
                 out.append({"direction": toks.get("direction") or f.stem, "tokens": toks})
         return JSONResponse({"ok": True, "starters": out})
