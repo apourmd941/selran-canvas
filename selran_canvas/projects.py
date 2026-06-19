@@ -317,9 +317,15 @@ def read_artifact(slug: str, subdir: str, filename: str) -> Optional[str]:
     ``..`` so the browser can't request ``manuscript/../../etc/passwd``
     via the HTTP endpoint.
     """
-    if "/" in filename or ".." in filename:
+    # GL-R1-001: guard ALL path components (slug + subdir + filename), not just
+    # filename, and assert the resolved path stays within PROJECTS_ROOT — slug/subdir
+    # previously flowed in unguarded (a 2-level climb could read ~/ child files).
+    for part in (slug, subdir, filename):
+        if not part or "/" in part or "\\" in part or ".." in part:
+            return None
+    f = (_project_path(slug) / subdir / filename).resolve()
+    if not f.is_relative_to(PROJECTS_ROOT.resolve()):
         return None
-    f = _project_path(slug) / subdir / filename
     if not f.is_file():
         return None
     try:
