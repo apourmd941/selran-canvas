@@ -65,7 +65,10 @@ def _loopback_badge() -> Optional[str]:
         return None
 
 
-def _req(method: str, path: str, body: Optional[dict] = None, timeout: float = 300.0) -> Any:
+def _req(method: str, path: str, body: Optional[dict] = None, timeout: float = 5.0) -> Any:
+    # GL-R1-003: short default so a silent orchestrator can't stall boot for 5 min
+    # (load_user_profile runs before the HTTP bind). LLM calls (embed/rerank/generate)
+    # pass an explicit long timeout.
     url = _base_url() + path
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
@@ -111,18 +114,18 @@ def provision(app: str) -> dict:
 
 def embed(texts: list[str], app: Optional[str] = None,
           prefer: Optional[str] = None) -> list[list[float]]:
-    return _req("POST", "/v1/embed", {"app": app, "texts": texts, "prefer": prefer})["vectors"]
+    return _req("POST", "/v1/embed", {"app": app, "texts": texts, "prefer": prefer}, timeout=300.0)["vectors"]
 
 
 def rerank(query: str, candidates: list[str], app: Optional[str] = None,
            prefer: Optional[str] = None) -> list[float]:
     return _req("POST", "/v1/rerank",
-                {"app": app, "query": query, "candidates": candidates, "prefer": prefer})["scores"]
+                {"app": app, "query": query, "candidates": candidates, "prefer": prefer}, timeout=300.0)["scores"]
 
 
 def generate(messages: list[dict], app: Optional[str] = None,
              prefer: Optional[str] = None) -> str:
-    return _req("POST", "/v1/generate", {"app": app, "messages": messages, "prefer": prefer})["text"]
+    return _req("POST", "/v1/generate", {"app": app, "messages": messages, "prefer": prefer}, timeout=300.0)["text"]
 
 
 def extract(messages: list[dict], schema: Optional[dict] = None,

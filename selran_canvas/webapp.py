@@ -189,6 +189,12 @@ def build_webapp(store: Store) -> FastAPI:
 
     @app.get("/api/health")
     async def health():
+        # GL-R1-005: real liveness — probe the DB so a post-boot outage returns 503
+        # instead of a lying 200 (revision() is an in-memory counter).
+        try:
+            store.ping()
+        except Exception as e:
+            return JSONResponse({"ok": False, "error": e.__class__.__name__}, status_code=503)
         return {"ok": True, "revision": store.revision()}
 
     # ---- Templates -------------------------------------------------------

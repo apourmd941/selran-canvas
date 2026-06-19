@@ -179,6 +179,12 @@ class Store:
         with self._lock:
             return self._revision
 
+    def ping(self) -> bool:
+        """GL-R1-005: cheap DB liveness check for /api/health (raises on failure)."""
+        with self._connect() as cx:
+            cx.execute("SELECT 1")
+        return True
+
     def add_listener(self) -> threading.Event:
         ev = threading.Event()
         with self._lock:

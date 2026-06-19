@@ -41,7 +41,8 @@ def _open_store(cfg):
 
 def _start_http_server(app, host: str, port: int) -> threading.Thread:
     """Run uvicorn in a background daemon thread."""
-    config = uvicorn.Config(app, host=host, port=port, log_level="warning", access_log=False)
+    # GL-R1-006: surface operational logs (was warning + access_log off → near-silent)
+    config = uvicorn.Config(app, host=host, port=port, log_level="info", access_log=True)
     server = uvicorn.Server(config)
 
     def _run():
@@ -62,6 +63,12 @@ def _start_http_server(app, host: str, port: int) -> threading.Thread:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # GL-R1-006: configure logging once at boot so module loggers aren't dropped.
+    import logging
+    logging.basicConfig(
+        level=os.environ.get("CANVAS_LOG_LEVEL", "INFO"),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     parser = argparse.ArgumentParser(description="Selran Canvas — page-aware canvas for Claude.")
     parser.add_argument("--http-only", action="store_true", help="Run HTTP/WS only; skip MCP stdio loop.")
     parser.add_argument("--info", action="store_true", help="Print configuration and exit.")
